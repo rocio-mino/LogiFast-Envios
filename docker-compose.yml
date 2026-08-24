@@ -1,0 +1,8 @@
+services:
+  envios-svc:
+    build: .
+    image: duoc/jv0101-caso17-envios:1.0.0
+    container_name: caso17-envios-svc
+    ports:
+      - "${PORT:-8080}:8080"
+    restart: unless-stopped

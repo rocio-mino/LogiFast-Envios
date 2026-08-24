@@ -1,0 +1,23 @@
+@startuml C4-1-Contexto
+!include <C4/C4_Context>
+
+title ms-envios — C4 Nivel 1: Contexto
+
+LAYOUT_WITH_LEGEND()
+
+Person(actor, "Transportista", "Supervisa envíos, rutas y entregas... supervisa envios y sus datos")
+System(sys, "ms-envios", "Administra los datos y la lógica del dominio de envíos del caso caso17 (logifast). Base de datos H2 en memoria, API REST y documentación OpenAPI.")
+
+System_Ext(core, "ms-rutas", "Servicio vecino del caso: origen de los eventos")
+System_Ext(notif, "ms-notificaciones", "Notificaciones del caso")
+System_Ext(cognito, "Amazon Cognito", "Autenticación y JWT por rol")
+System_Ext(bus, "Amazon EventBridge", "Bus de eventos de dominio logístico")
+
+Rel(actor, sys, "Usa el servicio", "HTTPS / REST + JWT")
+Rel(sys, core, "Origen de eventos del dominio", "REST / eventos")
+Rel_Back(notif, sys, "Notificaciones del caso", "EventBridge / SQS")
+Rel_Back(cognito, sys, "Autenticación y JWT por rol", "JWT")
+Rel(sys, bus, "Bus de eventos de dominio logístico", "AWS SDK")
+
+SHOW_LEGEND()
+@enduml

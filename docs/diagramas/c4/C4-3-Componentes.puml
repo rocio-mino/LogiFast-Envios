@@ -1,0 +1,30 @@
+@startuml C4-3-Componentes
+!include <C4/C4_Component>
+
+title ms-envios — C4 Nivel 3: Componentes internos
+
+LAYOUT_WITH_LEGEND()
+
+Person(actor, "Transportista", "Supervisa envíos, rutas y entregas")
+Container_Boundary(ms, "ms-envios — Spring Boot 3 (ECS Fargate)") {
+
+  Component(rest, "EnvioController", "Spring MVC REST", "Expone /api/envios: crear, consultar, actualizar y eliminar")
+  Component(svc, "EnvioService", "Java 21", "Lógica de negocio del dominio: validaciones, reglas y transiciones")
+  Component(cons, "EventoConsumer", "AWS SDK (SQS)", "Consume los eventos de alta frecuencia del dominio")
+  Component(dyn, "EstadoDynamoDB", "AWS SDK (DynamoDB)", "Escritura condicional del estado en tiempo real")
+  ComponentDb(repo, "EnvioRepository", "Spring Data JPA", "Persistencia del histórico del dominio")
+  Component(pub, "PublicadorEventos", "AWS SDK (Amazon EventBridge)", "Publica las transiciones de estado")
+}
+
+Container(apigw, "API Gateway", "Amazon API Gateway", "JWT + throttling")
+
+Rel(actor, apigw, "Usa la API", "HTTPS + JWT")
+Rel(apigw, rest, "Enruta /api/envios", "REST")
+Rel(cons, svc, "Entrega cada evento")
+Rel(rest, svc, "Consulta de estado")
+Rel(svc, dyn, "Actualiza el estado (condicional)", "AWS SDK")
+Rel(svc, repo, "Persiste el histórico", "JPA / SQL")
+Rel(svc, pub, "Publica la transición", "AWS SDK")
+
+SHOW_LEGEND()
+@enduml

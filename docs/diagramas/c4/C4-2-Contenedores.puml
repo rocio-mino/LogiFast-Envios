@@ -1,0 +1,27 @@
+@startuml C4-2-Contenedores
+!include <C4/C4_Container>
+
+title ms-envios — C4 Nivel 2: Contenedores
+
+LAYOUT_WITH_LEGEND()
+
+Person(actor, "Transportista", "Supervisa envíos, rutas y entregas")
+System_Boundary(sb, "ms-envios (dominio de Envios)") {
+  Container(api, "API de Envios", "Spring Boot 3 · Java 21 · ECS Fargate", "Expone /api/envios y persiste el dominio con su propia base de datos")
+  ContainerDb(dyn, "Estado en tiempo real", "Amazon DynamoDB (Global Tables)", "Datos del dominio: eventos y estado vigente")
+  ContainerQueue(q, "Ingesta de eventos", "Amazon SQS + DLQ", "Eventos de alta frecuencia persistidos")
+}
+
+Container(apigw, "API Gateway", "Amazon API Gateway", "JWT + throttling")
+Container(core, "ms-rutas", "Spring Boot 3", "Servicio vecino del caso: origen de los eventos")
+Container(ev, "Amazon EventBridge", "Servicio AWS", "Transiciones de estado del proceso")
+
+Rel(actor, apigw, "Usa la API", "HTTPS + JWT")
+Rel(apigw, api, "Enruta /api/envios", "REST")
+Rel_Back(core, q, "Publica eventos del proceso", "AWS SDK")
+Rel(q, api, "Entrega eventos para procesar", "AWS SDK")
+Rel(api, dyn, "Actualiza el estado (condicional)", "AWS SDK")
+Rel(api, ev, "Publica la transición", "AWS SDK")
+
+SHOW_LEGEND()
+@enduml
