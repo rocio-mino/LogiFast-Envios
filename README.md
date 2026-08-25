@@ -257,7 +257,11 @@ El uso de estas herramientas se realizó como apoyo al proceso de desarrollo, ma
 
 ### Rocio
 
-> Esta sección será completada por Rocio con su reflexión personal.
+Durante el desarrollo de la evaluación pude aprender y reforzar el uso de Git y GitHub junto a mi copmpañero. Mi aporte fue realizar la  documentación y la organización del README y posteriormente la realización del hotfix para actualizar la configuración de GitHub Actions. También aprendí a trabajar mediante ramas y Pull Requests, realizando revisiones y aprobaciones de los cambios de mi compañero antes de integrarlos a develop o main, cosa que antes no hacia, ya que solo hacia merge sin revisar, sin tomar en cuenta la importancia de recisar antes de aceptar.
+
+Una de las cosas que más me ayudó fue entender mejor el flujo de GitFlow y la importancia de mantener separadas las ramas de desarrollo y las ramas estables. También pude comprender mejor cómo los Pull Requests permiten mantener un registro de los cambios y revisar el trabajo antes de incorporarlo al proyecto.
+
+Considero que esta actividad me permitió mejorar mi forma de trabajar en equipo a la hora de utilizar gitflow y tener una visión más clara de cómo GitHub Actions puede automatizar la validación de un proyecto.
 
 ### Martin
 
