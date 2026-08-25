@@ -265,4 +265,8 @@ Considero que esta actividad me permitió mejorar mi forma de trabajar en equipo
 
 ### Martin
 
-> Esta sección será completada por Martin con su reflexión personal.
+Durante esta evaluación mi principal aporte estuvo relacionado con la configuración y validación del flujo de CI mediante GitHub Actions. Trabajé con Java 21 y Maven, configuré el workflow para ejecutar las pruebas y la verificación del proyecto, y comprobé que el proceso funcionara tanto con cambios en develop como mediante Pull Requests hacia main.
+
+También pude reforzar el uso de Git en un contexto colaborativo, especialmente la creación de ramas, commits, push, pull, Pull Requests y merges. Trabajar junto a Rocio me permitió entender mejor la importancia de revisar los cambios antes de integrarlos y de mantener una separación entre las ramas de trabajo, develop y main.
+
+Uno de los aprendizajes más importantes fue comprender mejor el propósito de CI/CD y cómo una herramienta como GitHub Actions puede automatizar tareas que antes tendrían que realizarse manualmente. También aprendí la importancia de mantener el repositorio ordenado y de utilizar convenciones de nombres y mensajes de commit para facilitar la trazabilidad de los cambios.
