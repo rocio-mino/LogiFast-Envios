@@ -257,8 +257,16 @@ El uso de estas herramientas se realizó como apoyo al proceso de desarrollo, ma
 
 ### Rocio
 
-> Esta sección será completada por Rocio con su reflexión personal.
+Durante el desarrollo de la evaluación pude aprender y reforzar el uso de Git y GitHub junto a mi copmpañero. Mi aporte fue realizar la  documentación y la organización del README y posteriormente la realización del hotfix para actualizar la configuración de GitHub Actions. También aprendí a trabajar mediante ramas y Pull Requests, realizando revisiones y aprobaciones de los cambios de mi compañero antes de integrarlos a develop o main, cosa que antes no hacia, ya que solo hacia merge sin revisar, sin tomar en cuenta la importancia de recisar antes de aceptar.
+
+Una de las cosas que más me ayudó fue entender mejor el flujo de GitFlow y la importancia de mantener separadas las ramas de desarrollo y las ramas estables. También pude comprender mejor cómo los Pull Requests permiten mantener un registro de los cambios y revisar el trabajo antes de incorporarlo al proyecto.
+
+Considero que esta actividad me permitió mejorar mi forma de trabajar en equipo a la hora de utilizar gitflow y tener una visión más clara de cómo GitHub Actions puede automatizar la validación de un proyecto.
 
 ### Martin
 
-> Esta sección será completada por Martin con su reflexión personal.
+Durante esta evaluación mi principal aporte estuvo relacionado con la configuración y validación del flujo de CI mediante GitHub Actions. Trabajé con Java 21 y Maven, configuré el workflow para ejecutar las pruebas y la verificación del proyecto, y comprobé que el proceso funcionara tanto con cambios en develop como mediante Pull Requests hacia main.
+
+También pude reforzar el uso de Git en un contexto colaborativo, especialmente la creación de ramas, commits, push, pull, Pull Requests y merges. Trabajar junto a Rocio me permitió entender mejor la importancia de revisar los cambios antes de integrarlos y de mantener una separación entre las ramas de trabajo, develop y main.
+
+Uno de los aprendizajes más importantes fue comprender mejor el propósito de CI/CD y cómo una herramienta como GitHub Actions puede automatizar tareas que antes tendrían que realizarse manualmente. También aprendí la importancia de mantener el repositorio ordenado y de utilizar convenciones de nombres y mensajes de commit para facilitar la trazabilidad de los cambios.
