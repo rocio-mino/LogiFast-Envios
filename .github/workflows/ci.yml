@@ -1,3 +1,4 @@
+
 name: CI - Envios
 
 on:
@@ -6,14 +7,14 @@ on:
       - develop
   pull_request:
     branches:
-      - main
+      - develop
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout del repositorio
+      - name: Descargar repositorio
         uses: actions/checkout@v4
 
       - name: Configurar Java 21
@@ -23,5 +24,8 @@ jobs:
           distribution: "temurin"
           cache: maven
 
-      - name: Ejecutar Maven Verify
+      - name: Ejecutar pruebas y verificar cobertura
         run: mvn verify
+
+      - name: Construir imagen Docker
+        run: docker build -t logifast-envios:ep2 .
