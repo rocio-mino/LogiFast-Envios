@@ -1,15 +1,49 @@
-
-name: CI - Envios
+# =============================================================================
+# CI/CD - Envios (LogiFast caso17)
+#
+#   build-and-test ──┬──► image ──────┐
+#   (IE2: Maven,     │   (IE1/IE4:    │
+#    JUnit, Cucumber,│    build +     ├──► deploy  (IE4/IE5: Docker Compose,
+#    JaCoCo 100%)    │    SHA tag)    │     verificación, escalado, evidencias)
+#                    │                │
+#   security ────────┴────────────────┘
+#   (IE3: Snyk Open Source + Snyk Code; BLOQUEA si hay vulnerabilidades >= high)
+#
+# El deploy solo corre si las pruebas, la seguridad y la imagen terminaron OK.
+# =============================================================================
+name: CI/CD - Envios
 
 on:
   push:
     branches:
       - develop
+      - main
   pull_request:
     branches:
+      - main
       - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash   # bash con -eo pipefail: un error en cualquier comando de un pipe falla el paso
+
+env:
+  IMAGE_NAME: duoc/jv0101-caso17-envios
 
 jobs:
+  # ---------------------------------------------------------------------------
+  # IE2 — Compilación, pruebas unitarias/BDD y cobertura (trabajo de Rocío).
+  # La construcción de la imagen (paso "Construir imagen Docker") se movió al
+  # job "image" para construirla una sola vez, etiquetada con el SHA del commit.
+  # ---------------------------------------------------------------------------
   build-and-test:
     runs-on: ubuntu-latest
 
@@ -27,5 +61,296 @@ jobs:
       - name: Ejecutar pruebas y verificar cobertura
         run: mvn verify
 
+      - name: Publicar reportes de pruebas y cobertura
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: reportes-pruebas-${{ github.sha }}
+          path: |
+            target/site/jacoco/
+            target/surefire-reports/
+            target/cucumber/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------
+  # IE3 — Análisis de seguridad con Snyk (control bloqueante)
+  # ---------------------------------------------------------------------------
+  security:
+    name: Seguridad (Snyk)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write   # publicar hallazgos en la pestaña Security
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v5
+
+      - name: Configurar Java 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: maven
+
+      - name: Verificar que existe SNYK_TOKEN
+        run: |
+          if [ -z "${SNYK_TOKEN}" ]; then
+            echo "::error title=Falta SNYK_TOKEN::Configura el secreto SNYK_TOKEN en Settings > Secrets and variables > Actions (y en Dependabot). Sin análisis de seguridad no se permite desplegar."
+            exit 1
+          fi
+
+      - name: Instalar Snyk CLI
+        run: |
+          npm install --global snyk
+          snyk --version
+
+      - name: Snyk Open Source - dependencias Maven (bloquea si severidad >= high)
+        id: snyk_deps
+        run: |
+          snyk test \
+            --severity-threshold=high \
+            --sarif-file-output=snyk-deps.sarif \
+            --json-file-output=snyk-deps.json
+
+      - name: Snyk Code - análisis estático del código (bloquea si severidad >= high)
+        id: snyk_code
+        # Corre aunque el paso anterior falle, para reportar ambos resultados
+        if: ${{ !cancelled() && env.SNYK_TOKEN != '' }}
+        run: |
+          snyk code test \
+            --severity-threshold=high \
+            --sarif-file-output=snyk-code.sarif \
+            --json-file-output=snyk-code.json
+
+      - name: Snyk Monitor - registrar el proyecto para alertas continuas
+        # Snyk avisa por correo si aparece una vulnerabilidad nueva en estas dependencias
+        if: ${{ github.event_name == 'push' && steps.snyk_deps.outcome == 'success' }}
+        continue-on-error: true
+        run: snyk monitor --project-name=logifast-envios --target-reference="${GITHUB_REF_NAME}"
+
+      - name: Publicar hallazgos de dependencias en GitHub Security
+        if: ${{ !cancelled() && hashFiles('snyk-deps.sarif') != '' }}
+        continue-on-error: true   # requiere repositorio público o GitHub Advanced Security
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: snyk-deps.sarif
+          category: snyk-open-source
+
+      - name: Publicar hallazgos de código en GitHub Security
+        if: ${{ !cancelled() && hashFiles('snyk-code.sarif') != '' }}
+        continue-on-error: true
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: snyk-code.sarif
+          category: snyk-code
+
+      - name: Resumen del análisis de seguridad
+        if: ${{ !cancelled() }}
+        run: |
+          {
+            echo "## Control de seguridad (Snyk)"
+            echo ""
+            echo "| Análisis | Umbral de bloqueo | Resultado |"
+            echo "|---|---|---|"
+            echo "| Snyk Open Source (dependencias) | high | ${{ steps.snyk_deps.outcome }} |"
+            echo "| Snyk Code (SAST) | high | ${{ steps.snyk_code.outcome }} |"
+            echo ""
+            echo "Si algún resultado es **failure**, el job falla y el deploy **no se ejecuta**."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Guardar reportes de Snyk
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: reportes-snyk-${{ github.sha }}
+          path: snyk-*.*
+          if-no-files-found: ignore
+          retention-days: 30
+
+  # ---------------------------------------------------------------------------
+  # IE1 / IE4 — Construcción de la imagen, etiquetada con el SHA del commit
+  # ---------------------------------------------------------------------------
+  image:
+    name: Imagen Docker (build + escaneo)
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+      version: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v5
+
+      - name: Calcular versión y etiquetas
+        id: meta
+        run: |
+          version="$(python3 -c "import xml.etree.ElementTree as E; r=E.parse('pom.xml').getroot(); print(r.find('{http://maven.apache.org/POM/4.0.0}version').text)")"
+          tag="${GITHUB_SHA::7}"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+          echo "Versión ${version} · commit ${GITHUB_SHA} · etiqueta ${tag}"
+
       - name: Construir imagen Docker
-        run: docker build -t logifast-envios:ep2 .
+        env:
+          TAG: ${{ steps.meta.outputs.tag }}
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          docker build --pull \
+            --tag "${IMAGE_NAME}:${TAG}" \
+            --tag "${IMAGE_NAME}:${VERSION}-${TAG}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --label "org.opencontainers.image.version=${VERSION}" \
+            --label "org.opencontainers.image.source=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.created=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --label "cl.duoc.pipeline.run=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            .
+          docker image ls "${IMAGE_NAME}"
+          docker image inspect "${IMAGE_NAME}:${TAG}" --format '{{json .Config.Labels}}' | jq .
+
+      - name: Snyk Container - vulnerabilidades de la imagen (alerta, no bloquea)
+        id: snyk_container
+        if: ${{ env.SNYK_TOKEN != '' }}
+        continue-on-error: true
+        env:
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          npm install --global snyk
+          snyk container test "${IMAGE_NAME}:${TAG}" \
+            --file=Dockerfile \
+            --severity-threshold=high \
+            --json-file-output=snyk-container.json
+
+      - name: Alerta por vulnerabilidades en la imagen base
+        if: ${{ steps.snyk_container.outcome == 'failure' }}
+        run: echo "::warning title=Snyk Container::La imagen tiene vulnerabilidades >= high en el sistema operativo base. Revisar reporte y actualizar la imagen base (Dependabot docker)."
+
+      - name: Exportar imagen para el job de deploy
+        env:
+          TAG: ${{ steps.meta.outputs.tag }}
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: docker save "${IMAGE_NAME}:${TAG}" "${IMAGE_NAME}:${VERSION}-${TAG}" | gzip -1 > image.tar.gz
+
+      - name: Subir imagen como artefacto
+        uses: actions/upload-artifact@v6
+        with:
+          name: imagen-docker-${{ steps.meta.outputs.tag }}
+          path: image.tar.gz
+          retention-days: 7
+          compression-level: 0
+
+      - name: Guardar reporte de Snyk Container
+        if: ${{ !cancelled() && hashFiles('snyk-container.json') != '' }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: reporte-snyk-container-${{ steps.meta.outputs.tag }}
+          path: snyk-container.json
+          retention-days: 30
+
+  # ---------------------------------------------------------------------------
+  # IE4 / IE5 — Despliegue automático en entorno simulado (Docker Compose)
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: Deploy (entorno simulado)
+    needs: [build-and-test, security, image]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      # Historial de despliegues visible en la pestaña "Deployments" del repositorio
+      name: ${{ github.event_name == 'pull_request' && 'preview' || 'simulado' }}
+    concurrency:
+      group: deploy-${{ github.ref }}
+      cancel-in-progress: false
+    env:
+      IMAGE_TAG: ${{ needs.image.outputs.tag }}
+      GIT_COMMIT: ${{ github.sha }}
+      APP_REPLICAS: "2"
+      PORT: "8080"
+      EVIDENCE_DIR: evidencias-ci
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v5
+
+      - name: Descargar la imagen construida (misma imagen probada, no se reconstruye)
+        uses: actions/download-artifact@v7
+        with:
+          name: imagen-docker-${{ needs.image.outputs.tag }}
+
+      - name: Cargar imagen en Docker
+        run: |
+          gunzip -c image.tar.gz | docker load
+          rm image.tar.gz
+          mkdir -p "${EVIDENCE_DIR}"
+
+      - name: Generar credenciales efímeras de la base de datos
+        run: |
+          pass="$(openssl rand -hex 16)"
+          echo "::add-mask::${pass}"
+          echo "DB_PASSWORD=${pass}" >> "${GITHUB_ENV}"
+
+      - name: Desplegar con Docker Compose
+        run: SKIP_BUILD=1 bash scripts/deploy.sh 2>&1 | tee "${EVIDENCE_DIR}/01-deploy.log"
+
+      - name: Verificación post-deploy (health, commit, réplicas, API)
+        run: EXPECTED_COMMIT="${GITHUB_SHA}" bash scripts/verify-deploy.sh 2>&1 | tee "${EVIDENCE_DIR}/02-verificacion.log"
+
+      - name: Prueba de escalado y autorrecuperación
+        run: bash scripts/test-scaling.sh 2>&1 | tee "${EVIDENCE_DIR}/03-escalado.log"
+
+      - name: Registro de trazabilidad del despliegue
+        if: ${{ !cancelled() }}
+        env:
+          JOB_STATUS: ${{ job.status }}
+          VERSION: ${{ needs.image.outputs.version }}
+        run: |
+          image_id="$(docker image inspect "${IMAGE_NAME}:${IMAGE_TAG}" --format '{{.Id}}' 2>/dev/null || echo n/a)"
+          jq -n \
+            --arg commit "${GITHUB_SHA}" \
+            --arg ref "${GITHUB_REF_NAME}" \
+            --arg event "${GITHUB_EVENT_NAME}" \
+            --arg actor "${GITHUB_ACTOR}" \
+            --arg run "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            --arg image "${IMAGE_NAME}:${IMAGE_TAG}" \
+            --arg image_id "${image_id}" \
+            --arg version "${VERSION}" \
+            --arg replicas "${APP_REPLICAS}" \
+            --arg status "${JOB_STATUS}" \
+            --arg date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{fecha:$date, commit:$commit, rama:$ref, evento:$event, autor:$actor, version:$version, imagen:$image, image_id:$image_id, replicas:$replicas, resultado:$status, ejecucion:$run}' \
+            | tee "${EVIDENCE_DIR}/00-registro-despliegue.json"
+          docker compose ps > "${EVIDENCE_DIR}/04-compose-ps.txt" 2>&1 || true
+          docker stats --no-stream > "${EVIDENCE_DIR}/05-docker-stats.txt" 2>&1 || true
+          docker compose logs --no-color > "${EVIDENCE_DIR}/06-logs-servicios.log" 2>&1 || true
+          {
+            echo "## Despliegue en entorno simulado"
+            echo ""
+            echo "| Campo | Valor |"
+            echo "|---|---|"
+            echo "| Resultado | **${JOB_STATUS}** |"
+            echo "| Commit | \`${GITHUB_SHA}\` |"
+            echo "| Rama / evento | ${GITHUB_REF_NAME} / ${GITHUB_EVENT_NAME} |"
+            echo "| Imagen | \`${IMAGE_NAME}:${IMAGE_TAG}\` (versión ${VERSION}) |"
+            echo "| Image ID | \`${image_id}\` |"
+            echo "| Réplicas | ${APP_REPLICAS} (probado escalado a 3) |"
+            echo ""
+            echo "Evidencias completas en el artefacto **evidencia-deploy-${IMAGE_TAG}**."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Subir evidencias del despliegue
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: evidencia-deploy-${{ needs.image.outputs.tag }}
+          path: evidencias-ci/
+          retention-days: 30
+
+      - name: Apagar el entorno simulado
+        if: ${{ always() }}
+        run: docker compose down --volumes --remove-orphans

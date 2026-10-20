@@ -1,0 +1,73 @@
+# IE3 — Escaneo y actualización automática de dependencias con Dependabot.
+# Dependabot abre Pull Requests hacia "develop" (GitFlow). Cada PR pasa por el
+# pipeline completo (pruebas + Snyk + build + deploy simulado) antes del merge.
+version: 2
+updates:
+  # Dependencias Java del microservicio (pom.xml)
+  - package-ecosystem: "maven"
+    directory: "/"
+    target-branch: "develop"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "America/Santiago"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "java"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      # Agrupa los parches menores para no saturar de PRs; las versiones mayores
+      # llegan en PRs separados para revisarlas con calma.
+      maven-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Acciones usadas en .github/workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "develop"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "America/Santiago"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+
+  # Imágenes base del Dockerfile (maven / eclipse-temurin)
+  - package-ecosystem: "docker"
+    directory: "/"
+    target-branch: "develop"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "America/Santiago"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore"
+
+  # Imágenes de docker-compose.yml (postgres / nginx)
+  - package-ecosystem: "docker-compose"
+    directory: "/"
+    target-branch: "develop"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "America/Santiago"
+    labels:
+      - "dependencies"
+      - "docker"
+    commit-message:
+      prefix: "chore"

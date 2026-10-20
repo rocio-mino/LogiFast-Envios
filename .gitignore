@@ -5,3 +5,8 @@ target/
 .env
 *.log
 .DS_Store
+# Artefactos locales del pipeline
+evidencias-ci/
+image.tar.gz
+snyk-*.json
+snyk-*.sarif
