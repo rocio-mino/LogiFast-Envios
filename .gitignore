@@ -5,3 +5,11 @@ target/
 .env
 *.log
 .DS_Store
+# Artefactos locales del pipeline
+evidencias-ci/
+image.tar.gz
+snyk-*.json
+snyk-*.sarif
+
+# Las evidencias de la EP2 sí se versionan
+!evidencias/**/*.log

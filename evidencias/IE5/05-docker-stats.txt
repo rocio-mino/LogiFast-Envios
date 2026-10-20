@@ -1,0 +1,5 @@
+CONTAINER ID   NAME                           CPU %     MEM USAGE / LIMIT   MEM %     NET I/O           BLOCK I/O         PIDS
+f4f372692a9c   logifast-envios-lb-1           0.00%     4.922MiB / 64MiB    7.69%     46.7kB / 48kB     0B / 4.1kB        5
+1fbe49d057ba   logifast-envios-envios-svc-1   0.11%     237.8MiB / 512MiB   46.45%    17.7kB / 20.9kB   0B / 0B           31
+3c38ba25d9fd   logifast-envios-envios-svc-2   0.12%     246.6MiB / 512MiB   48.17%    33.2kB / 38.4kB   0B / 0B           31
+110178986bdf   logifast-envios-db-1           0.01%     65.32MiB / 256MiB   25.51%    108kB / 81.7kB    6.22MB / 53.6MB   26

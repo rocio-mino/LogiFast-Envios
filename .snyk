@@ -1,0 +1,18 @@
+# Snyk (https://snyk.io) policy file — excepciones de seguridad auditadas (IE3)
+#
+# Cada excepción debe tener: motivo, fecha de creación y fecha de expiración.
+# Al expirar, Snyk vuelve a bloquear el pipeline y la excepción debe revisarse.
+version: v1.25.0
+ignore:
+  SNYK-JAVA-ORGGLASSFISHJAXB-20883142:
+    - '*':
+        reason: >-
+          XXE en org.glassfish.jaxb:jaxb-core (CVE-2026-92877). No existe versión
+          corregida publicada (fix solo en la rama master del proyecto). La librería
+          llega como dependencia transitiva de Hibernate, que la usa solo para leer
+          archivos de mapeo XML propios del classpath; el microservicio no tiene
+          mapeos XML y su API solo acepta JSON, por lo que no procesa XML externo.
+          Revisar cuando se publique jaxb-core con la corrección (Dependabot lo propondrá).
+        created: 2026-10-20T22:30:00.000Z
+        expires: 2027-01-31T00:00:00.000Z
+patch: {}

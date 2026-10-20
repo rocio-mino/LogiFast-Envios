@@ -1,0 +1,80 @@
+==> 1. Escalado horizontal: 2 -> 3 réplicas
+ Container logifast-envios-db-1  Running
+ Container logifast-envios-envios-svc-1  Running
+ Container logifast-envios-envios-svc-2  Running
+ Container logifast-envios-envios-svc-3  Creating
+ Container logifast-envios-envios-svc-3  Created
+ Container logifast-envios-lb-1  Running
+ Container logifast-envios-db-1  Waiting
+ Container logifast-envios-db-1  Healthy
+ Container logifast-envios-envios-svc-3  Starting
+ Container logifast-envios-envios-svc-3  Started
+ Container logifast-envios-envios-svc-3  Waiting
+ Container logifast-envios-envios-svc-1  Waiting
+ Container logifast-envios-envios-svc-2  Waiting
+ Container logifast-envios-envios-svc-3  Healthy
+ Container logifast-envios-envios-svc-1  Healthy
+ Container logifast-envios-envios-svc-2  Healthy
+ Container logifast-envios-lb-1  Waiting
+ Container logifast-envios-db-1  Waiting
+ Container logifast-envios-envios-svc-3  Waiting
+ Container logifast-envios-envios-svc-1  Waiting
+ Container logifast-envios-envios-svc-2  Waiting
+ Container logifast-envios-lb-1  Healthy
+ Container logifast-envios-db-1  Healthy
+ Container logifast-envios-envios-svc-3  Healthy
+ Container logifast-envios-envios-svc-1  Healthy
+ Container logifast-envios-envios-svc-2  Healthy
+NAME                           IMAGE                               COMMAND                  SERVICE      CREATED          STATUS                    PORTS
+logifast-envios-envios-svc-1   duoc/jv0101-caso17-envios:154ec30   "java -jar /app/app.…"   envios-svc   58 seconds ago   Up 51 seconds (healthy)   8080/tcp
+logifast-envios-envios-svc-2   duoc/jv0101-caso17-envios:154ec30   "java -jar /app/app.…"   envios-svc   58 seconds ago   Up 51 seconds (healthy)   8080/tcp
+logifast-envios-envios-svc-3   duoc/jv0101-caso17-envios:154ec30   "java -jar /app/app.…"   envios-svc   23 seconds ago   Up 21 seconds (healthy)   8080/tcp
+  OK  3 réplicas healthy
+==> 2. Balanceo de carga entre réplicas
+  respondió: 1fbe49d057ba
+  respondió: 3c38ba25d9fd
+  respondió: da3befff3247
+  OK  el tráfico se reparte entre 3 réplicas
+==> 3. Tolerancia a fallos: se detiene el proceso Java de una réplica
+  réplica afectada: /logifast-envios-envios-svc-1
+  20/20 peticiones exitosas durante la caída
+  OK  el servicio siguió respondiendo con una réplica caída
+==> 4. Autorrecuperación (restart: unless-stopped + healthcheck)
+  /logifast-envios-envios-svc-1: reinicios 0 -> 1
+  OK  la réplica se reinició sola y volvió a estar healthy
+==> 5. Uso de recursos con 3 réplicas
+NAME                           CPU %     MEM USAGE / LIMIT   PIDS
+logifast-envios-envios-svc-3   3.30%     244.4MiB / 512MiB   31
+logifast-envios-lb-1           0.00%     5.199MiB / 64MiB    5
+logifast-envios-envios-svc-1   0.11%     237.6MiB / 512MiB   31
+logifast-envios-envios-svc-2   3.52%     247.1MiB / 512MiB   31
+logifast-envios-db-1           3.01%     81.49MiB / 256MiB   36
+==> 6. Vuelta a 2 réplicas
+ Container logifast-envios-db-1  Running
+ Container logifast-envios-envios-svc-1  Running
+ Container logifast-envios-envios-svc-2  Running
+ Container logifast-envios-envios-svc-3  Stopping
+ Container logifast-envios-envios-svc-3  Stopped
+ Container logifast-envios-envios-svc-3  Removing
+ Container logifast-envios-envios-svc-3  Removed
+ Container logifast-envios-lb-1  Running
+ Container logifast-envios-db-1  Waiting
+ Container logifast-envios-db-1  Healthy
+ Container logifast-envios-envios-svc-1  Waiting
+ Container logifast-envios-envios-svc-2  Waiting
+ Container logifast-envios-envios-svc-1  Healthy
+ Container logifast-envios-envios-svc-2  Healthy
+ Container logifast-envios-lb-1  Waiting
+ Container logifast-envios-db-1  Waiting
+ Container logifast-envios-envios-svc-1  Waiting
+ Container logifast-envios-envios-svc-2  Waiting
+ Container logifast-envios-lb-1  Healthy
+ Container logifast-envios-db-1  Healthy
+ Container logifast-envios-envios-svc-1  Healthy
+ Container logifast-envios-envios-svc-2  Healthy
+NAME                           IMAGE                               COMMAND                  SERVICE      CREATED              STATUS                        PORTS
+logifast-envios-envios-svc-1   duoc/jv0101-caso17-envios:154ec30   "java -jar /app/app.…"   envios-svc   About a minute ago   Up 25 seconds (healthy)       8080/tcp
+logifast-envios-envios-svc-2   duoc/jv0101-caso17-envios:154ec30   "java -jar /app/app.…"   envios-svc   About a minute ago   Up About a minute (healthy)   8080/tcp
+  OK  escalado hacia abajo completado
+
+PRUEBA DE ESCALADO Y AUTORRECUPERACIÓN EXITOSA

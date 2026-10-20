@@ -18,9 +18,43 @@ spring:
 
 server:
   port: ${PORT:8080}
+  # IE3: cierre ordenado (las réplicas terminan las peticiones en curso antes de detenerse)
+  shutdown: graceful
 
 springdoc:
   api-docs:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
+
+# ---------------------------------------------------------------------------
+# IE3 / IE4 / IE5 — Observabilidad para healthchecks, despliegue y trazabilidad
+# ---------------------------------------------------------------------------
+management:
+  endpoints:
+    web:
+      exposure:
+        # Solo se exponen health e info (principio de mínimo privilegio)
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true          # /actuator/health/liveness y /actuator/health/readiness
+      show-details: never      # no se filtran detalles internos
+      group:
+        readiness:
+          include: readinessState,db   # "listo" solo si la base de datos responde
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+
+# Datos expuestos en /actuator/info: permiten verificar qué versión y qué commit
+# están corriendo después de cada despliegue (trazabilidad IE4).
+info:
+  app:
+    name: ${spring.application.name}
+    version: '@project.version@'
+    commit: ${APP_COMMIT:local}
+    instance: ${HOSTNAME:local}

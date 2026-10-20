@@ -5,10 +5,10 @@ Microservicio correspondiente al **caso 17 — LogiFast**, una plataforma de tra
 | | |
 |---|---|
 | **Asignatura** | JVY0101 — Java: Diseño y Construcción de Soluciones Nativas en Nube |
-| **Stack** | Spring Boot 3.3.5, Java 21, Maven, Spring Data JPA, H2 y springdoc-openapi |
+| **Stack** | Spring Boot 4.0.8, Java 21, Maven, Spring Data JPA, H2 / PostgreSQL y springdoc-openapi |
 | **Calidad** | Pruebas automatizadas, Cucumber y JaCoCo |
-| **Contenedores** | Docker y Docker Compose |
-| **Integración continua** | GitHub Actions |
+| **Contenedores** | Docker y Docker Compose (balanceador nginx, réplicas y PostgreSQL) |
+| **CI/CD** | GitHub Actions, Snyk, Dependabot y despliegue automático trazable por SHA |
 
 ## Responsabilidad del microservicio (SRP)
 
@@ -58,6 +58,11 @@ El proyecto incorpora **Spring Boot Actuator** para consultar el estado de salud
 | Método | Ruta | Descripción |
 |---|---|---|
 | GET | `/actuator/health` | Consulta el estado de salud del servicio. |
+| GET | `/actuator/health/liveness` | Indica si el proceso está vivo. |
+| GET | `/actuator/health/readiness` | Indica si el servicio está listo para recibir tráfico (incluye la base de datos). Lo usa el healthcheck de Docker Compose. |
+| GET | `/actuator/info` | Nombre, versión, **commit** e instancia que respondió (trazabilidad del despliegue). |
+
+Solo se exponen `health` e `info`; el resto de los endpoints de Actuator no está publicado.
 
 Para comprobar el endpoint cuando la aplicación se encuentra ejecutándose localmente en el puerto 8080:
 
@@ -87,6 +92,10 @@ La documentación complementaria se encuentra en la carpeta [`docs/`](docs/):
 - [`docs/03_Pruebas.md`](docs/03_Pruebas.md): pruebas unitarias, cobertura y Cucumber.
 - [`docs/04_Despliegue.md`](docs/04_Despliegue.md): instrucciones de despliegue.
 - [`docs/05_Justificacion.md`](docs/05_Justificacion.md): justificación del servicio, RF/RNF, seguridad, stack tecnológico y tecnologías AWS.
+- [`docs/06_Seguridad_Escalabilidad.md`](docs/06_Seguridad_Escalabilidad.md): Dependabot, Snyk, política de bloqueo y parámetros de escalabilidad (IE3).
+- [`docs/07_CICD_Despliegue.md`](docs/07_CICD_Despliegue.md): pipeline, despliegue automático, trazabilidad y prueba de bloqueo (IE4).
+- [`docs/08_Orquestacion.md`](docs/08_Orquestacion.md): Docker Compose con balanceador, réplicas, healthchecks, escalado y comandos (IE5).
+- [`evidencias/`](evidencias/): capturas y logs de cada indicador.
 - [`docs/diagramas/`](docs/diagramas/): diagramas C4 de contexto, contenedores y componentes, secuencia e infraestructura AWS, además de diagramas de Docker, Docker Compose e integración.
 
 ## Estructura del proyecto
@@ -109,10 +118,18 @@ LogiFast-Envios/
 │   ├── 05_Justificacion.md
 │   └── diagramas/
 ├── .github/
-│   └── workflows/
-│       └── ci.yml
+│   ├── workflows/
+│   │   └── ci.yml            # pipeline CI/CD
+│   └── dependabot.yml        # actualización de dependencias
+├── deploy/nginx/default.conf # balanceador de carga
+├── scripts/
+│   ├── deploy.sh             # despliegue (pipeline y local)
+│   ├── verify-deploy.sh      # verificación post-deploy
+│   └── test-scaling.sh       # prueba de escalado y autorrecuperación
+├── evidencias/               # capturas y logs por indicador
 ├── Dockerfile
 ├── docker-compose.yml
+├── .env.example
 ├── pom.xml
 ├── README.md
 └── .gitignore
@@ -153,13 +170,19 @@ El proyecto utiliza un Dockerfile multi-stage para separar la construcción de l
 
 Este enfoque evita incluir Maven y todas las herramientas de compilación en la imagen final y permite ejecutar la aplicación sin utilizar el usuario `root`.
 
-### Construir y levantar el servicio
+### Construir y levantar el entorno con Docker Compose
+
+`docker-compose.yml` levanta un **balanceador nginx** (único puerto publicado),
+**2 réplicas** del microservicio y **PostgreSQL** compartido, con healthchecks y
+límites de CPU y memoria. Detalle en [`docs/08_Orquestacion.md`](docs/08_Orquestacion.md).
 
 Desde la raíz del repositorio:
 
 ```bash
-docker compose up --build -d
+docker compose up --build -d --wait
 ```
+
+`--wait` espera a que la base de datos, las réplicas y el balanceador estén *healthy*.
 
 Consultar el estado de los servicios:
 
@@ -173,46 +196,60 @@ Consultar los registros del microservicio:
 docker compose logs -f envios-svc
 ```
 
-Probar la aplicación:
+Probar la aplicación y su estado de salud:
 
 ```bash
 curl -i http://localhost:8080/
+curl -i http://localhost:8080/actuator/health
+curl http://localhost:8080/actuator/info      # versión, commit e instancia que respondió
 ```
 
-Comprobar el estado de salud:
+Verificación completa y prueba de escalado (requieren `bash`, `curl` y `jq`; en Windows, Git Bash o WSL):
 
 ```bash
-curl -i http://localhost:8080/actuator/health
+./scripts/verify-deploy.sh
+./scripts/test-scaling.sh
+```
+
+Escalar manualmente:
+
+```bash
+docker compose up -d --scale envios-svc=3 --wait
 ```
 
 Detener los servicios:
 
 ```bash
-docker compose down
+docker compose down        # agregar -v para borrar también los datos de PostgreSQL
 ```
 
-Este último comando detiene y elimina los contenedores administrados por ese archivo Compose, pero no elimina los volúmenes nombrados.
+`docker compose down` detiene y elimina los contenedores, pero no elimina el volumen
+`db-data`; para eso se usa `-v`.
+
+En el entorno Compose la consola H2 queda deshabilitada, porque los datos viven en
+PostgreSQL para que todas las réplicas compartan el mismo estado.
 
 ### Configuración del puerto
 
-El servicio utiliza el puerto 8080 del contenedor y publica el puerto del equipo mediante la variable `PORT`.
-
-En `docker-compose.yml`:
+El balanceador publica el puerto del equipo mediante la variable `PORT`:
 
 ```yaml
-ports:
-  - "${PORT:-8080}:8080"
+lb:
+  ports:
+    - "${PORT:-8080}:80"
 ```
 
-Si no se define `PORT`, se utiliza el puerto 8080 del equipo.
+Si no se define `PORT`, se utiliza el puerto 8080 del equipo. Las réplicas del
+microservicio no publican puertos; solo se accede a ellas a través del balanceador.
+Las demás variables están en [`.env.example`](.env.example).
 
 ### Etiquetas de las imágenes Docker
 
 El repositorio utiliza distintas etiquetas según el procedimiento de construcción:
 
-- **Docker Compose:** `duoc/jv0101-caso17-envios:1.0.0`.
+- **Docker Compose en local:** `duoc/jv0101-caso17-envios:1.0.0` (configurable con `IMAGE_TAG`).
 - **Pruebas locales de la EP2:** `logifast-envios:ep2`.
-- **Construcción de CI:** `logifast-envios:ci`.
+- **Pipeline CI/CD:** `duoc/jv0101-caso17-envios:<sha7>` y `duoc/jv0101-caso17-envios:<versión>-<sha7>`, donde `<sha7>` es el SHA corto del commit.
 
 Estas etiquetas identifican imágenes diferentes. La imagen `logifast-envios:ep2` se construyó correctamente durante las pruebas locales y presentó un uso en disco de 564 MB y un tamaño de contenido de 166 MB en el entorno donde se midió. Estos valores pueden variar según la versión de Docker y la plataforma.
 
@@ -271,33 +308,95 @@ El reporte HTML se genera en:
 target/site/jacoco/index.html
 ```
 
-## Integración continua y CI/CD
+## Pipeline CI/CD
 
-El repositorio utiliza **GitHub Actions** para automatizar la validación de los cambios.
-
-El workflow se encuentra en `.github/workflows/ci.yml`.
+El pipeline está en [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
 ### Eventos que activan el workflow
 
-Según la configuración actual, la integración continua se ejecuta ante:
-
-- Un `push` a la rama `develop`.
-- Un Pull Request dirigido a la rama `develop`.
+- Un `push` a `develop` o a `main`.
+- Un Pull Request dirigido a `develop` o a `main` (incluidos los de Dependabot).
+- Ejecución manual desde la pestaña *Actions* (`workflow_dispatch`).
 
 ### Etapas del pipeline
 
-1. **Descarga del repositorio:** utiliza `actions/checkout@v5`.
-2. **Configuración de Java:** prepara Java 21 con Eclipse Temurin mediante `actions/setup-java@v5` y habilita la caché de Maven.
-3. **Pruebas y cobertura:** ejecuta `mvn verify`, incluyendo las pruebas automatizadas y los controles de cobertura configurados con JaCoCo.
-4. **Construcción de la imagen Docker:** ejecuta `docker build -t logifast-envios:ci .`.
+```mermaid
+flowchart LR
+    A[push / PR] --> B[build-and-test<br/>mvn verify]
+    A --> C[security<br/>Snyk]
+    B --> D[image<br/>docker build :SHA]
+    B --> E
+    C --> E
+    D --> E[deploy<br/>Docker Compose]
+```
 
-### Resultado validado
+| Etapa (job) | IE | Qué hace | Bloquea el deploy si… |
+|---|---|---|---|
+| `build-and-test` | IE2 | Descarga el repositorio, configura Java 21, ejecuta `mvn verify` (JUnit, Cucumber, JaCoCo) y publica los reportes | falla una prueba o no se cumple la cobertura |
+| `Seguridad (Snyk)` | IE3 | Snyk Open Source (dependencias) y Snyk Code (análisis estático); publica hallazgos y registra el proyecto para alertas | hay vulnerabilidades **high/critical** o falta `SNYK_TOKEN` |
+| `Imagen Docker (build + escaneo)` | IE1 · IE4 | Construye la imagen con el `Dockerfile`, etiquetada con el SHA del commit y labels OCI; Snyk Container como alerta | la imagen no compila |
+| `Deploy (entorno simulado)` | IE4 · IE5 | Despliega con Docker Compose la misma imagen construida, verifica salud, commit y API, prueba el escalado y guarda evidencias | — (falla si la verificación falla) |
 
-El workflow completó correctamente las etapas de pruebas, verificación de cobertura y construcción de la imagen Docker.
+El job `deploy` declara `needs: [build-and-test, security, image]`: si las pruebas
+o el análisis de seguridad fallan, **no se despliega**.
 
-La integración mediante Pull Requests permite comprobar los cambios antes de incorporarlos a `develop`.
+### Seguridad (IE3)
 
-**Nota:** la configuración documentada corresponde al workflow actual. No debe interpretarse como una ejecución automática de despliegue a producción, ya que el pipeline descrito realiza validaciones y construcción de la imagen.
+- **Dependabot** (`.github/dependabot.yml`): revisa semanalmente Maven, GitHub
+  Actions, las imágenes del `Dockerfile` y de `docker-compose.yml`, y abre Pull Requests hacia `develop`.
+- **Snyk**: análisis de dependencias y de código en cada ejecución, con umbral de
+  bloqueo `high`. El escaneo de la imagen genera alertas sin bloquear.
+- **Contenedores endurecidos**: usuario sin privilegios `app` (Dockerfile),
+  sistema de archivos de solo lectura, sin capacidades de Linux, base de datos en
+  red interna, solo `health` e `info` expuestos.
+- **Remediación guiada por Snyk:** el primer análisis bloqueó el pipeline con 27
+  vulnerabilidades (3 críticas) en Spring Framework 6.2, Tomcat, Jackson, Logback,
+  Micrometer y el driver de PostgreSQL. Spring Boot 3.5 ya no recibe correcciones
+  gratuitas, así que el proyecto se migró a **Spring Boot 4.0.8** (Spring Framework 7,
+  springdoc 3.0.3, Cucumber 7.34.9) y se forzaron versiones corregidas de Tomcat,
+  Jackson 2 y PostgreSQL en el `pom.xml`. La única vulnerabilidad sin corrección
+  publicada (JAXB, usada internamente por Hibernate) queda como excepción auditada y
+  con fecha de expiración en [`.snyk`](.snyk).
+
+Política completa y configuración de secretos: [`docs/06_Seguridad_Escalabilidad.md`](docs/06_Seguridad_Escalabilidad.md).
+
+### Escalabilidad (IE3 · IE5)
+
+| Parámetro | Valor |
+|---|---|
+| Réplicas | 2 (configurable con `APP_REPLICAS`; probado con 3) |
+| CPU por réplica | límite 0.75, reserva 0.25 |
+| Memoria por réplica | límite 512M, reserva 256M, heap JVM 60% |
+| Conexiones a la base / hilos de Tomcat | 10 / 100 por réplica |
+| Balanceo | nginx round-robin, con reintento en otra réplica y detección dinámica de réplicas |
+
+### Despliegue y trazabilidad (IE4)
+
+1. Cada imagen se etiqueta con el **SHA corto del commit** y lleva labels OCI
+   (`revision`, `version`, `source` y el enlace al run de Actions).
+2. El job `deploy` no reconstruye: descarga y despliega **la misma imagen** que
+   se construyó y analizó en el run.
+3. La aplicación informa el commit en ejecución en `GET /actuator/info`, y
+   `verify-deploy.sh` exige que coincida con el commit del pipeline.
+4. Cada despliegue queda registrado en la pestaña *Deployments* (entornos
+   `simulado` y `preview`), en el resumen del run y en el artefacto
+   `evidencia-deploy-<sha7>` (registro JSON, logs, `docker compose ps`, `docker stats`).
+5. GitFlow con Pull Requests revisados conecta cada despliegue con el cambio que
+   lo originó y con quién lo aprobó.
+
+Verificaciones automáticas después del despliegue: health, liveness y readiness
+en `UP`; commit correcto; todas las réplicas con la imagen correcta y *healthy*;
+límites de recursos aplicados; CRUD completo a través del balanceador; validación
+(400); y endpoints sensibles no expuestos. Detalle en [`docs/07_CICD_Despliegue.md`](docs/07_CICD_Despliegue.md).
+
+### Cómo se garantiza la calidad
+
+- Pull Request obligatorio y revisión del otro integrante antes de integrar a `develop` o `main`.
+- Checks requeridos: pruebas, seguridad, imagen y despliegue en verde.
+- Cobertura JaCoCo con los umbrales configurados y pruebas BDD de los endpoints;
+  las pruebas incluyen los endpoints de salud (`ActuatorEndpointsTest`) de los que
+  dependen el healthcheck y la verificación del despliegue.
+- El despliegue solo se considera exitoso si la verificación automática pasa.
 
 ## Estrategia de ramificación
 
@@ -406,6 +505,8 @@ Durante el desarrollo de esta evaluación se utilizó ChatGPT como herramienta d
 
 Las decisiones finales, la comprobación de los comandos y la validación del funcionamiento del proyecto se realizaron contrastando las sugerencias con el repositorio y los resultados obtenidos.
 
+Para los indicadores IE3, IE4 e IE5 se utilizó además Claude (Anthropic) como apoyo para proponer la configuración de Dependabot y Snyk, el job de despliegue, el archivo Docker Compose con balanceador y los scripts de verificación, y para redactar una primera versión de la documentación técnica (`docs/06` a `docs/08`). Las configuraciones fueron revisadas, ejecutadas en GitHub Actions y ajustadas por el equipo. Las reflexiones individuales se redactaron sin IA. Referencia: Anthropic. (2026). *Claude* [Modelo de lenguaje]. https://claude.ai
+
 ## Reflexiones individuales
 
 ### Rocío
@@ -416,6 +517,10 @@ Durante el proyecto LogiFast, lo que más me costó fue identificar qué pasos d
 
 ## Estado de la entrega
 
-Este README documenta los aspectos verificados del microservicio de envíos, su contenedorización, las pruebas automatizadas y la integración continua.
-
-Los demás indicadores de la evaluación deben documentarse conforme se implementen, integren y validen sus respectivas soluciones.
+| Indicador | Estado | Evidencia |
+|---|---|---|
+| IE1 — Contenedores | Dockerfile multi-stage con usuario sin privilegios; imagen construida en el pipeline | `Dockerfile`, job `image` |
+| IE2 — Pruebas | `mvn verify` con JUnit, Cucumber y JaCoCo en cada ejecución | job `build-and-test`, artefacto `reportes-pruebas-<sha>` |
+| IE3 — Seguridad y escalabilidad | Dependabot, Snyk con bloqueo, límites y réplicas | [`docs/06`](docs/06_Seguridad_Escalabilidad.md), [`evidencias/IE3`](evidencias/IE3) |
+| IE4 — Despliegue y trazabilidad | Deploy automático condicionado, imagen por SHA, verificación post-deploy | [`docs/07`](docs/07_CICD_Despliegue.md), [`evidencias/IE4`](evidencias/IE4) |
+| IE5 — Orquestación | Docker Compose con balanceador, réplicas, healthchecks y límites | [`docs/08`](docs/08_Orquestacion.md), [`evidencias/IE5`](evidencias/IE5) |

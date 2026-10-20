@@ -1,0 +1,13 @@
+{
+  "fecha": "2026-10-20T22:36:17Z",
+  "commit": "154ec30d8e3f32647fde9a0d8a077c286ebd3c68",
+  "rama": "14/merge",
+  "evento": "pull_request",
+  "autor": "martin-silvab",
+  "version": "1.0.0",
+  "imagen": "duoc/jv0101-caso17-envios:154ec30",
+  "image_id": "sha256:b2d1059ef6ae2646b93bec9568ef76c5e0b91409635215fc81986a3493337e7e",
+  "replicas": "2",
+  "resultado": "success",
+  "ejecucion": "https://github.com/rocio-mino/LogiFast-Envios/actions/runs/39508795175"
+}
