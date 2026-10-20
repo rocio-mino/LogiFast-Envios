@@ -37,13 +37,15 @@
 ### Remediación aplicada (primer análisis)
 
 El primer run del job `security` **bloqueó el deploy** con 27 vulnerabilidades
-(24 high y 3 critical) en dependencias transitivas de Spring Boot 3.5. Acciones:
+(24 high y 3 critical) en dependencias transitivas de Spring Boot 3.5. Tras migrar a
+Boot 4, el segundo run volvió a bloquear con 4 vulnerabilidades de Jackson 3. Acciones:
 
 | Hallazgo | Corrección |
 |---|---|
 | Spring Framework 6.2.19 (`spring-webmvc`, `spring-web`, `spring-beans`, `spring-expression`): 1 critical + 6 high, sin corrección gratuita en 6.2 | Migración a **Spring Boot 4.0.8** (Spring Framework 7.0.9) |
 | Tomcat 10.1.55: 2 critical + 5 high | Boot 4 + `tomcat.version` = 11.0.27 (Boot 4.0.8 trae 11.0.24, aún afectada) |
 | Jackson 2 (`jackson-core`/`jackson-databind` 2.21.4): 5 high | `jackson-2-bom.version` = 2.21.8 (lo usa springdoc/swagger) |
+| Jackson 3 (`tools.jackson` 3.1.5, que trae Boot 4.0.8): 4 high — detectado en el segundo análisis, tras migrar | `jackson-bom.version` = 3.1.8 |
 | Logback 1.5.34, Micrometer 1.15.12 | Versiones de Boot 4.0.8 (1.5.38 y 1.16.7) |
 | PostgreSQL JDBC 42.7.11: 2 high | `postgresql.version` = 42.7.14 |
 | commons-lang3 3.17.0 (vía springdoc) | Versión gestionada por Boot 4.0.8 (3.19.0) |
