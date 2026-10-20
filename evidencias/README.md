@@ -10,6 +10,7 @@ copian aquí.
 |---|---|---|
 | 1 | `IE3/01-dependabot-config.png` | *Insights → Dependency graph → Dependabot*: los 4 ecosistemas (maven, github-actions, docker, docker-compose) activos |
 | 2 | `IE3/02-dependabot-pr.png` | Un PR abierto por Dependabot con sus checks |
+| 2b | `IE3/02b-snyk-bloqueo-real.png` + `IE3/02b-snyk-bloqueo-real.txt` | **Bloqueo real del primer análisis**: run con Snyk en rojo (27 vulnerabilidades, 3 críticas), **Deploy skipped**, y el log del paso Snyk Open Source copiado al `.txt`. Es la mejor evidencia del control bloqueante |
 | 3 | `IE3/03-snyk-verde.png` | Run con el job **Seguridad (Snyk)** en verde y su resumen |
 | 4 | `IE3/04-snyk-bloqueo.png` | Run de la rama `test/bloqueo-seguridad`: Snyk en rojo y **Deploy skipped** ([procedimiento](../docs/07_CICD_Despliegue.md#5-prueba-del-bloqueo-de-seguridad)) |
 | 5 | `IE3/05-snyk-detalle.png` | Log del paso Snyk Open Source mostrando la vulnerabilidad crítica de log4j |

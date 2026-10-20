@@ -5,7 +5,7 @@ Microservicio correspondiente al **caso 17 — LogiFast**, una plataforma de tra
 | | |
 |---|---|
 | **Asignatura** | JVY0101 — Java: Diseño y Construcción de Soluciones Nativas en Nube |
-| **Stack** | Spring Boot 3.5.16, Java 21, Maven, Spring Data JPA, H2 / PostgreSQL y springdoc-openapi |
+| **Stack** | Spring Boot 4.0.8, Java 21, Maven, Spring Data JPA, H2 / PostgreSQL y springdoc-openapi |
 | **Calidad** | Pruebas automatizadas, Cucumber y JaCoCo |
 | **Contenedores** | Docker y Docker Compose (balanceador nginx, réplicas y PostgreSQL) |
 | **CI/CD** | GitHub Actions, Snyk, Dependabot y despliegue automático trazable por SHA |
@@ -349,8 +349,14 @@ o el análisis de seguridad fallan, **no se despliega**.
 - **Contenedores endurecidos**: usuario sin privilegios `app` (Dockerfile),
   sistema de archivos de solo lectura, sin capacidades de Linux, base de datos en
   red interna, solo `health` e `info` expuestos.
-- Spring Boot se actualizó de 3.3.5 a **3.5.16** (y springdoc a 2.8.17) para
-  corregir vulnerabilidades conocidas de Tomcat y Spring presentes en la versión anterior.
+- **Remediación guiada por Snyk:** el primer análisis bloqueó el pipeline con 27
+  vulnerabilidades (3 críticas) en Spring Framework 6.2, Tomcat, Jackson, Logback,
+  Micrometer y el driver de PostgreSQL. Spring Boot 3.5 ya no recibe correcciones
+  gratuitas, así que el proyecto se migró a **Spring Boot 4.0.8** (Spring Framework 7,
+  springdoc 3.0.3, Cucumber 7.34.9) y se forzaron versiones corregidas de Tomcat,
+  Jackson 2 y PostgreSQL en el `pom.xml`. La única vulnerabilidad sin corrección
+  publicada (JAXB, usada internamente por Hibernate) queda como excepción auditada y
+  con fecha de expiración en [`.snyk`](.snyk).
 
 Política completa y configuración de secretos: [`docs/06_Seguridad_Escalabilidad.md`](docs/06_Seguridad_Escalabilidad.md).
 
