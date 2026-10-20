@@ -1,0 +1,278 @@
+db-1          | The files belonging to this database system will be owned by user "postgres".
+db-1          | This user must also own the server process.
+db-1          | 
+db-1          | The database cluster will be initialized with locale "en_US.utf8".
+db-1          | The default database encoding has accordingly been set to "UTF8".
+db-1          | The default text search configuration will be set to "english".
+db-1          | 
+db-1          | Data page checksums are disabled.
+db-1          | 
+db-1          | fixing permissions on existing directory /var/lib/postgresql/data ... ok
+db-1          | creating subdirectories ... ok
+db-1          | selecting dynamic shared memory implementation ... posix
+db-1          | selecting default max_connections ... 100
+db-1          | selecting default shared_buffers ... 128MB
+db-1          | selecting default time zone ... UTC
+db-1          | creating configuration files ... ok
+db-1          | running bootstrap script ... ok
+envios-svc-1  | Picked up JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60 -XX:+ExitOnOutOfMemoryError
+envios-svc-1  | 
+envios-svc-1  |   .   ____          _            __ _ _
+envios-svc-1  |  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+db-1          | sh: locale: not found
+db-1          | 2026-10-20 22:34:48.813 UTC [35] WARNING:  no usable system locales were found
+db-1          | performing post-bootstrap initialization ... ok
+db-1          | syncing data to disk ... ok
+db-1          | 
+db-1          | 
+db-1          | Success. You can now start the database server using:
+db-1          | 
+db-1          |     pg_ctl -D /var/lib/postgresql/data -l logfile start
+db-1          | 
+db-1          | initdb: warning: enabling "trust" authentication for local connections
+db-1          | initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+db-1          | waiting for server to start....2026-10-20 22:34:49.769 UTC [41] LOG:  starting PostgreSQL 16.15 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+db-1          | 2026-10-20 22:34:49.770 UTC [41] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+db-1          | 2026-10-20 22:34:49.772 UTC [44] LOG:  database system was shut down at 2026-10-20 22:34:49 UTC
+db-1          | 2026-10-20 22:34:49.776 UTC [41] LOG:  database system is ready to accept connections
+db-1          |  done
+db-1          | server started
+db-1          | CREATE DATABASE
+db-1          | 
+db-1          | 
+db-1          | /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+envios-svc-1  | ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+envios-svc-1  |  \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+db-1          | 
+envios-svc-1  |   '  |____| .__|_| |_|_| |_\__, | / / / /
+envios-svc-1  |  =========|_|==============|___/=/_/_/_/
+envios-svc-2  | Picked up JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60 -XX:+ExitOnOutOfMemoryError
+envios-svc-1  | 
+envios-svc-1  |  :: Spring Boot ::                (v4.0.8)
+lb-1          | /docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+envios-svc-1  | 
+lb-1          | /docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+envios-svc-1  | 2026-10-20T22:34:56.685Z  INFO 1 --- [envios-svc] [           main] c.d.j.caso17.envios.EnvioApplication     : Starting EnvioApplication v1.0.0 using Java 21.0.12.1 with PID 1 (/app/app.jar started by app in /app)
+lb-1          | /docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+envios-svc-1  | 2026-10-20T22:34:56.688Z  INFO 1 --- [envios-svc] [           main] c.d.j.caso17.envios.EnvioApplication     : No active profile set, falling back to 1 default profile: "default"
+lb-1          | 10-listen-on-ipv6-by-default.sh: info: can not modify /etc/nginx/conf.d/default.conf (read-only file system?)
+envios-svc-1  | 2026-10-20T22:34:59.571Z  INFO 1 --- [envios-svc] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+envios-svc-1  | 2026-10-20T22:34:59.679Z  INFO 1 --- [envios-svc] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 101 ms. Found 1 JPA repository interface.
+envios-svc-1  | 2026-10-20T22:35:01.711Z  INFO 1 --- [envios-svc] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+envios-svc-1  | 2026-10-20T22:35:01.770Z  INFO 1 --- [envios-svc] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+envios-svc-1  | 2026-10-20T22:35:01.770Z  INFO 1 --- [envios-svc] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.27]
+envios-svc-1  | 2026-10-20T22:35:01.961Z  INFO 1 --- [envios-svc] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 5083 ms
+envios-svc-1  | 2026-10-20T22:35:03.480Z  INFO 1 --- [envios-svc] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+envios-svc-1  | 2026-10-20T22:35:03.590Z  INFO 1 --- [envios-svc] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.24.Final
+envios-svc-1  | 2026-10-20T22:35:04.986Z  INFO 1 --- [envios-svc] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+lb-1          | /docker-entrypoint.sh: Sourcing /docker-entrypoint.d/15-local-resolvers.envsh
+lb-1          | /docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+lb-1          | /docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+lb-1          | /docker-entrypoint.sh: Configuration complete; ready for start up
+lb-1          | 2026/10/20 22:35:15 [notice] 1#1: using the "epoll" event method
+lb-1          | 2026/10/20 22:35:15 [notice] 1#1: nginx/1.28.3
+lb-1          | 2026/10/20 22:35:15 [notice] 1#1: built by gcc 15.2.0 (Alpine 15.2.0) 
+lb-1          | 2026/10/20 22:35:15 [notice] 1#1: OS: Linux 7.0.0-1017-azure
+lb-1          | 2026/10/20 22:35:15 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 65536:65536
+lb-1          | 2026/10/20 22:35:15 [notice] 1#1: start worker processes
+lb-1          | 2026/10/20 22:35:15 [notice] 1#1: start worker process 21
+db-1          | waiting for server to shut down....2026-10-20 22:34:49.909 UTC [41] LOG:  received fast shutdown request
+lb-1          | 2026/10/20 22:35:15 [notice] 1#1: start worker process 22
+db-1          | 2026-10-20 22:34:49.910 UTC [41] LOG:  aborting any active transactions
+db-1          | 2026-10-20 22:34:49.913 UTC [41] LOG:  background worker "logical replication launcher" (PID 47) exited with exit code 1
+db-1          | 2026-10-20 22:34:49.914 UTC [42] LOG:  shutting down
+db-1          | 2026-10-20 22:34:49.914 UTC [42] LOG:  checkpoint starting: shutdown immediate
+db-1          | 2026-10-20 22:34:49.970 UTC [42] LOG:  checkpoint complete: wrote 926 buffers (5.7%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.049 s, sync=0.006 s, total=0.056 s; sync files=301, longest=0.005 s, average=0.001 s; distance=4283 kB, estimate=4283 kB; lsn=0/1925D58, redo lsn=0/1925D58
+lb-1          | 2026/10/20 22:35:15 [notice] 1#1: start worker process 23
+lb-1          | 2026/10/20 22:35:15 [notice] 1#1: start worker process 24
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:20 +0000] "GET /actuator/health HTTP/1.1" 200 60 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:20 +0000] "GET /actuator/health/liveness HTTP/1.1" 200 25 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:21 +0000] "GET /actuator/health/readiness HTTP/1.1" 200 25 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:21 +0000] "GET /actuator/info HTTP/1.1" 200 400 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:21 +0000] "POST /api/envios HTTP/1.1" 201 80 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:22 +0000] "GET /api/envios/1 HTTP/1.1" 200 81 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:22 +0000] "GET /api/envios/1 HTTP/1.1" 200 81 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:22 +0000] "GET /api/envios/1 HTTP/1.1" 200 81 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:22 +0000] "GET /api/envios/1 HTTP/1.1" 200 81 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:22 +0000] "PUT /api/envios/1 HTTP/1.1" 200 81 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:22 +0000] "DELETE /api/envios/1 HTTP/1.1" 204 0 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:22 +0000] "GET /api/envios/1 HTTP/1.1" 404 0 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:22 +0000] "POST /api/envios HTTP/1.1" 400 107 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:22 +0000] "GET /actuator/env HTTP/1.1" 404 107 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:22 +0000] "GET /h2-console HTTP/1.1" 404 105 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:51 +0000] "GET /actuator/info HTTP/1.1" 200 400 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:51 +0000] "GET /actuator/info HTTP/1.1" 200 400 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:51 +0000] "GET /actuator/info HTTP/1.1" 200 400 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:51 +0000] "GET /actuator/info HTTP/1.1" 200 400 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:51 +0000] "GET /actuator/info HTTP/1.1" 200 400 "-" "curl/8.5.0" "-"
+envios-svc-1  | 2026-10-20T22:35:05.083Z  INFO 1 --- [envios-svc] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+envios-svc-1  | 2026-10-20T22:35:05.670Z  INFO 1 --- [envios-svc] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@602b7944
+envios-svc-1  | 2026-10-20T22:35:05.671Z  INFO 1 --- [envios-svc] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:51 +0000] "GET /actuator/info HTTP/1.1" 200 400 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:51 +0000] "GET /actuator/info HTTP/1.1" 200 400 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:51 +0000] "GET /actuator/info HTTP/1.1" 200 400 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:51 +0000] "GET /actuator/info HTTP/1.1" 200 400 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:51 +0000] "GET /actuator/info HTTP/1.1" 200 400 "-" "curl/8.5.0" "-"
+envios-svc-1  | 2026-10-20T22:35:05.875Z  INFO 1 --- [envios-svc] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+db-1          | 2026-10-20 22:34:49.975 UTC [41] LOG:  database system is shut down
+envios-svc-1  | 	Database JDBC URL [jdbc:postgresql://db:5432/envios]
+db-1          |  done
+envios-svc-1  | 	Database driver: PostgreSQL JDBC Driver
+db-1          | server stopped
+envios-svc-1  | 	Database dialect: PostgreSQLDialect
+envios-svc-2  | 
+envios-svc-1  | 	Database version: 16.15
+envios-svc-1  | 	Default catalog/schema: envios/public
+envios-svc-2  |   .   ____          _            __ _ _
+envios-svc-1  | 	Autocommit mode: undefined/unknown
+envios-svc-2  |  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+envios-svc-2  | ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+envios-svc-1  | 	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:51 +0000] "GET /actuator/info HTTP/1.1" 200 400 "-" "curl/8.5.0" "-"
+envios-svc-1  | 	JDBC fetch size: none
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:51 +0000] "GET /actuator/info HTTP/1.1" 200 400 "-" "curl/8.5.0" "-"
+envios-svc-1  | 	Pool: DataSourceConnectionProvider
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:51 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:52 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+lb-1          | 2026/10/20 22:35:52 [error] 22#22: *43 connect() failed (111: Connection refused) while connecting to upstream, client: 172.18.0.1, server: _, request: "GET /api/envios HTTP/1.1", upstream: "http://172.18.0.2:8080/api/envios", host: "localhost:8080"
+lb-1          | 2026/10/20 22:35:52 [warn] 22#22: *43 upstream server temporarily disabled while connecting to upstream, client: 172.18.0.1, server: _, request: "GET /api/envios HTTP/1.1", upstream: "http://172.18.0.2:8080/api/envios", host: "localhost:8080"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:52 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:53 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:53 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:53 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:54 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:54 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:54 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:55 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+envios-svc-1  | 	Minimum pool size: undefined/unknown
+envios-svc-1  | 	Maximum pool size: undefined/unknown
+envios-svc-1  | 2026-10-20T22:35:08.865Z  INFO 1 --- [envios-svc] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:55 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+envios-svc-1  | 2026-10-20T22:35:08.998Z  INFO 1 --- [envios-svc] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+envios-svc-1  | 2026-10-20T22:35:09.184Z  INFO 1 --- [envios-svc] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:55 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+envios-svc-1  | 2026-10-20T22:35:09.790Z  INFO 1 --- [envios-svc] [           main] o.s.b.w.a.WelcomePageHandlerMapping      : Adding welcome page: class path resource [static/index.html]
+db-1          | 
+envios-svc-1  | 2026-10-20T22:35:11.301Z  INFO 1 --- [envios-svc] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoints beneath base path '/actuator'
+envios-svc-1  | 2026-10-20T22:35:11.475Z  INFO 1 --- [envios-svc] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:55 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+db-1          | PostgreSQL init process complete; ready for start up.
+db-1          | 
+db-1          | 2026-10-20 22:34:50.027 UTC [1] LOG:  starting PostgreSQL 16.15 on x86_64-pc-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit
+db-1          | 2026-10-20 22:34:50.028 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+db-1          | 2026-10-20 22:34:50.028 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+db-1          | 2026-10-20 22:34:50.029 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+db-1          | 2026-10-20 22:34:50.031 UTC [57] LOG:  database system was shut down at 2026-10-20 22:34:49 UTC
+db-1          | 2026-10-20 22:34:50.035 UTC [1] LOG:  database system is ready to accept connections
+envios-svc-2  |  \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+envios-svc-2  |   '  |____| .__|_| |_|_| |_\__, | / / / /
+envios-svc-2  |  =========|_|==============|___/=/_/_/_/
+envios-svc-2  | 
+envios-svc-2  |  :: Spring Boot ::                (v4.0.8)
+envios-svc-2  | 
+envios-svc-2  | 2026-10-20T22:34:56.824Z  INFO 1 --- [envios-svc] [           main] c.d.j.caso17.envios.EnvioApplication     : Starting EnvioApplication v1.0.0 using Java 21.0.12.1 with PID 1 (/app/app.jar started by app in /app)
+envios-svc-2  | 2026-10-20T22:34:56.827Z  INFO 1 --- [envios-svc] [           main] c.d.j.caso17.envios.EnvioApplication     : No active profile set, falling back to 1 default profile: "default"
+envios-svc-2  | 2026-10-20T22:34:59.933Z  INFO 1 --- [envios-svc] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+envios-svc-1  | 2026-10-20T22:35:11.484Z  INFO 1 --- [envios-svc] [           main] c.d.j.caso17.envios.EnvioApplication     : Started EnvioApplication in 16.208 seconds (process running for 17.902)
+envios-svc-2  | 2026-10-20T22:35:00.041Z  INFO 1 --- [envios-svc] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 98 ms. Found 1 JPA repository interface.
+envios-svc-2  | 2026-10-20T22:35:02.041Z  INFO 1 --- [envios-svc] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:56 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+envios-svc-2  | 2026-10-20T22:35:02.055Z  INFO 1 --- [envios-svc] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+envios-svc-1  | 2026-10-20T22:35:11.766Z  WARN 1 --- [envios-svc] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+envios-svc-1  | 2026-10-20T22:35:11.766Z  WARN 1 --- [envios-svc] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+envios-svc-1  | 2026-10-20T22:35:14.074Z  INFO 1 --- [envios-svc] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+envios-svc-1  | 2026-10-20T22:35:14.075Z  INFO 1 --- [envios-svc] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+envios-svc-1  | 2026-10-20T22:35:14.076Z  INFO 1 --- [envios-svc] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+envios-svc-1  | 2026-10-20T22:35:22.540Z  WARN 1 --- [envios-svc] [nio-8080-exec-8] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.web.bind.MethodArgumentNotValidException: Validation failed for argument [0] in public org.springframework.http.ResponseEntity<cl.duoc.jv0101.caso17.envios.model.Envio> cl.duoc.jv0101.caso17.envios.controller.EnvioController.crear(cl.duoc.jv0101.caso17.envios.model.Envio): [Field error in object 'envio' on field 'nombre': rejected value [null]; codes [NotBlank.envio.nombre,NotBlank.nombre,NotBlank.java.lang.String,NotBlank]; arguments [org.springframework.context.support.DefaultMessageSourceResolvable: codes [envio.nombre,nombre]; arguments []; default message [nombre]]; default message [El nombre es obligatorio]] ]
+envios-svc-1  | 2026-10-20T22:35:51.556Z  INFO 1 --- [envios-svc] [ionShutdownHook] o.s.boot.tomcat.GracefulShutdown         : Commencing graceful shutdown. Waiting for active requests to complete
+envios-svc-1  | 2026-10-20T22:35:51.559Z  INFO 1 --- [envios-svc] [tomcat-shutdown] o.s.boot.tomcat.GracefulShutdown         : Graceful shutdown complete
+envios-svc-1  | 2026-10-20T22:35:51.565Z  INFO 1 --- [envios-svc] [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+envios-svc-1  | 2026-10-20T22:35:51.567Z  INFO 1 --- [envios-svc] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+envios-svc-1  | 2026-10-20T22:35:51.570Z  INFO 1 --- [envios-svc] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+envios-svc-1  | Picked up JAVA_TOOL_OPTIONS: -XX:MaxRAMPercentage=60 -XX:+ExitOnOutOfMemoryError
+envios-svc-1  | 
+envios-svc-1  |   .   ____          _            __ _ _
+envios-svc-1  |  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+envios-svc-1  | ( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+envios-svc-1  |  \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:56 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:56 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:57 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:57 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+envios-svc-1  |   '  |____| .__|_| |_|_| |_\__, | / / / /
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:57 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+envios-svc-1  |  =========|_|==============|___/=/_/_/_/
+lb-1          | 172.18.0.1 - - [20/Oct/2026:22:35:58 +0000] "GET /api/envios HTTP/1.1" 200 12 "-" "curl/8.5.0" "-"
+envios-svc-1  | 
+envios-svc-1  |  :: Spring Boot ::                (v4.0.8)
+envios-svc-1  | 
+envios-svc-1  | 2026-10-20T22:35:55.329Z  INFO 1 --- [envios-svc] [           main] c.d.j.caso17.envios.EnvioApplication     : Starting EnvioApplication v1.0.0 using Java 21.0.12.1 with PID 1 (/app/app.jar started by app in /app)
+envios-svc-1  | 2026-10-20T22:35:55.399Z  INFO 1 --- [envios-svc] [           main] c.d.j.caso17.envios.EnvioApplication     : No active profile set, falling back to 1 default profile: "default"
+envios-svc-1  | 2026-10-20T22:35:58.421Z  INFO 1 --- [envios-svc] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+envios-svc-1  | 2026-10-20T22:35:58.609Z  INFO 1 --- [envios-svc] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 180 ms. Found 1 JPA repository interface.
+envios-svc-1  | 2026-10-20T22:36:00.444Z  INFO 1 --- [envios-svc] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat initialized with port 8080 (http)
+envios-svc-1  | 2026-10-20T22:36:00.511Z  INFO 1 --- [envios-svc] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+envios-svc-1  | 2026-10-20T22:36:00.511Z  INFO 1 --- [envios-svc] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.27]
+envios-svc-1  | 2026-10-20T22:36:00.703Z  INFO 1 --- [envios-svc] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 5182 ms
+envios-svc-1  | 2026-10-20T22:36:02.217Z  INFO 1 --- [envios-svc] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+envios-svc-1  | 2026-10-20T22:36:02.325Z  INFO 1 --- [envios-svc] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.24.Final
+envios-svc-1  | 2026-10-20T22:36:03.626Z  INFO 1 --- [envios-svc] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+envios-svc-1  | 2026-10-20T22:36:03.714Z  INFO 1 --- [envios-svc] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+envios-svc-1  | 2026-10-20T22:36:04.216Z  INFO 1 --- [envios-svc] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@602b7944
+envios-svc-1  | 2026-10-20T22:36:04.218Z  INFO 1 --- [envios-svc] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+envios-svc-1  | 2026-10-20T22:36:04.502Z  INFO 1 --- [envios-svc] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+envios-svc-1  | 	Database JDBC URL [jdbc:postgresql://db:5432/envios]
+envios-svc-1  | 	Database driver: PostgreSQL JDBC Driver
+envios-svc-1  | 	Database dialect: PostgreSQLDialect
+envios-svc-1  | 	Database version: 16.15
+envios-svc-1  | 	Default catalog/schema: envios/public
+envios-svc-2  | 2026-10-20T22:35:02.056Z  INFO 1 --- [envios-svc] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/11.0.27]
+envios-svc-1  | 	Autocommit mode: undefined/unknown
+envios-svc-1  | 	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+envios-svc-1  | 	JDBC fetch size: none
+envios-svc-1  | 	Pool: DataSourceConnectionProvider
+envios-svc-1  | 	Minimum pool size: undefined/unknown
+envios-svc-1  | 	Maximum pool size: undefined/unknown
+envios-svc-2  | 2026-10-20T22:35:02.346Z  INFO 1 --- [envios-svc] [           main] b.w.c.s.WebApplicationContextInitializer : Root WebApplicationContext: initialization completed in 5324 ms
+envios-svc-1  | 2026-10-20T22:36:07.727Z  INFO 1 --- [envios-svc] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+envios-svc-1  | 2026-10-20T22:36:07.831Z  INFO 1 --- [envios-svc] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+envios-svc-1  | 2026-10-20T22:36:08.104Z  INFO 1 --- [envios-svc] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+envios-svc-1  | 2026-10-20T22:36:08.799Z  INFO 1 --- [envios-svc] [           main] o.s.b.w.a.WelcomePageHandlerMapping      : Adding welcome page: class path resource [static/index.html]
+envios-svc-1  | 2026-10-20T22:36:10.312Z  INFO 1 --- [envios-svc] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoints beneath base path '/actuator'
+envios-svc-1  | 2026-10-20T22:36:10.512Z  INFO 1 --- [envios-svc] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'
+envios-svc-1  | 2026-10-20T22:36:10.523Z  INFO 1 --- [envios-svc] [           main] c.d.j.caso17.envios.EnvioApplication     : Started EnvioApplication in 16.801 seconds (process running for 18.646)
+envios-svc-1  | 2026-10-20T22:36:10.802Z  WARN 1 --- [envios-svc] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+envios-svc-1  | 2026-10-20T22:36:10.803Z  WARN 1 --- [envios-svc] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+envios-svc-1  | 2026-10-20T22:36:12.321Z  INFO 1 --- [envios-svc] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+envios-svc-1  | 2026-10-20T22:36:12.321Z  INFO 1 --- [envios-svc] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+envios-svc-1  | 2026-10-20T22:36:12.323Z  INFO 1 --- [envios-svc] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
+envios-svc-2  | 2026-10-20T22:35:03.825Z  INFO 1 --- [envios-svc] [           main] org.hibernate.orm.jpa                    : HHH008540: Processing PersistenceUnitInfo [name: default]
+envios-svc-2  | 2026-10-20T22:35:03.934Z  INFO 1 --- [envios-svc] [           main] org.hibernate.orm.core                   : HHH000001: Hibernate ORM core version 7.2.24.Final
+envios-svc-2  | 2026-10-20T22:35:05.140Z  INFO 1 --- [envios-svc] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+envios-svc-2  | 2026-10-20T22:35:05.170Z  INFO 1 --- [envios-svc] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+envios-svc-2  | 2026-10-20T22:35:05.851Z  INFO 1 --- [envios-svc] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@602b7944
+envios-svc-2  | 2026-10-20T22:35:05.852Z  INFO 1 --- [envios-svc] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+envios-svc-2  | 2026-10-20T22:35:06.121Z  INFO 1 --- [envios-svc] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+envios-svc-2  | 	Database JDBC URL [jdbc:postgresql://db:5432/envios]
+envios-svc-2  | 	Database driver: PostgreSQL JDBC Driver
+envios-svc-2  | 	Database dialect: PostgreSQLDialect
+envios-svc-2  | 	Database version: 16.15
+envios-svc-2  | 	Default catalog/schema: envios/public
+envios-svc-2  | 	Autocommit mode: undefined/unknown
+envios-svc-2  | 	Isolation level: READ_COMMITTED [default READ_COMMITTED]
+envios-svc-2  | 	JDBC fetch size: none
+envios-svc-2  | 	Pool: DataSourceConnectionProvider
+envios-svc-2  | 	Minimum pool size: undefined/unknown
+envios-svc-2  | 	Maximum pool size: undefined/unknown
+envios-svc-2  | 2026-10-20T22:35:08.837Z  INFO 1 --- [envios-svc] [           main] org.hibernate.orm.core                   : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+envios-svc-2  | 2026-10-20T22:35:08.951Z  INFO 1 --- [envios-svc] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+envios-svc-2  | 2026-10-20T22:35:09.226Z  INFO 1 --- [envios-svc] [           main] o.s.d.j.r.query.QueryEnhancerFactories   : Hibernate is in classpath; If applicable, HQL parser will be used.
+envios-svc-2  | 2026-10-20T22:35:09.936Z  INFO 1 --- [envios-svc] [           main] o.s.b.w.a.WelcomePageHandlerMapping      : Adding welcome page: class path resource [static/index.html]
+envios-svc-2  | 2026-10-20T22:35:11.421Z  INFO 1 --- [envios-svc] [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 2 endpoints beneath base path '/actuator'
+envios-svc-2  | 2026-10-20T22:35:11.632Z  INFO 1 --- [envios-svc] [           main] o.s.boot.tomcat.TomcatWebServer          : Tomcat started on port 8080 (http) with context path '/'
+envios-svc-2  | 2026-10-20T22:35:11.642Z  INFO 1 --- [envios-svc] [           main] c.d.j.caso17.envios.EnvioApplication     : Started EnvioApplication in 16.392 seconds (process running for 17.915)
+envios-svc-2  | 2026-10-20T22:35:11.927Z  WARN 1 --- [envios-svc] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+envios-svc-2  | 2026-10-20T22:35:11.927Z  WARN 1 --- [envios-svc] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+envios-svc-2  | 2026-10-20T22:35:14.344Z  INFO 1 --- [envios-svc] [nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+envios-svc-2  | 2026-10-20T22:35:14.345Z  INFO 1 --- [envios-svc] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+envios-svc-2  | 2026-10-20T22:35:14.347Z  INFO 1 --- [envios-svc] [nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms

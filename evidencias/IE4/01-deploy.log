@@ -1,0 +1,216 @@
+==> Desplegando envios-svc
+    commit   : 154ec30d8e3f32647fde9a0d8a077c286ebd3c68
+    imagen   : duoc/jv0101-caso17-envios:154ec30
+    réplicas : 2
+ db Pulling 
+ lb Pulling 
+ 589002ba0eae Pulling fs layer 
+ 1d9cbdb003be Pulling fs layer 
+ e914c6e98e37 Pulling fs layer 
+ 589002ba0eae Waiting 
+ d631a49fb4f7 Pulling fs layer 
+ 1d9cbdb003be Waiting 
+ e914c6e98e37 Waiting 
+ 8f7c784e2471 Pulling fs layer 
+ d631a49fb4f7 Waiting 
+ 44fa0a5a779f Pulling fs layer 
+ 8f7c784e2471 Waiting 
+ 98104829f3fe Pulling fs layer 
+ 44fa0a5a779f Waiting 
+ 0151c82f84a9 Pulling fs layer 
+ 98104829f3fe Waiting 
+ 0151c82f84a9 Waiting 
+ e2de96513ba9 Already exists 
+ 1b7f9cd581ee Pulling fs layer 
+ 210b280f9556 Pulling fs layer 
+ 81717818649a Pulling fs layer 
+ 3ae6141cfd99 Pulling fs layer 
+ 25b77f59fd95 Pulling fs layer 
+ 6c25da34e03f Pulling fs layer 
+ a88782f92806 Pulling fs layer 
+ d8d21be4bf02 Pulling fs layer 
+ 6117bd39f23f Pulling fs layer 
+ 509688edf37b Pulling fs layer 
+ 3ae6141cfd99 Waiting 
+ 25b77f59fd95 Waiting 
+ 6c25da34e03f Waiting 
+ a88782f92806 Waiting 
+ d8d21be4bf02 Waiting 
+ 509688edf37b Waiting 
+ 6117bd39f23f Waiting 
+ 1b7f9cd581ee Downloading [==================================================>]     969B/969B
+ 1b7f9cd581ee Download complete 
+ 1b7f9cd581ee Extracting [==================================================>]     969B/969B
+ 1b7f9cd581ee Extracting [==================================================>]     969B/969B
+ 210b280f9556 Downloading [>                                                  ]  15.79kB/901.4kB
+ 81717818649a Downloading [==================================================>]     172B/172B
+ 81717818649a Verifying Checksum 
+ 81717818649a Download complete 
+ 1b7f9cd581ee Pull complete 
+ 210b280f9556 Verifying Checksum 
+ 210b280f9556 Download complete 
+ 210b280f9556 Extracting [=>                                                 ]  32.77kB/901.4kB
+ 210b280f9556 Extracting [==================================================>]  901.4kB/901.4kB
+ 210b280f9556 Extracting [==================================================>]  901.4kB/901.4kB
+ 210b280f9556 Pull complete 
+ 81717818649a Extracting [==================================================>]     172B/172B
+ 81717818649a Extracting [==================================================>]     172B/172B
+ 81717818649a Pull complete 
+ 3ae6141cfd99 Downloading [==================================================>]     116B/116B
+ 3ae6141cfd99 Verifying Checksum 
+ 3ae6141cfd99 Download complete 
+ 3ae6141cfd99 Extracting [==================================================>]     116B/116B
+ 3ae6141cfd99 Extracting [==================================================>]     116B/116B
+ 3ae6141cfd99 Pull complete 
+ 25b77f59fd95 Downloading [>                                                  ]  536.7kB/111.3MB
+ 6c25da34e03f Downloading [==================>                                ]  3.502kB/9.669kB
+ 6c25da34e03f Downloading [==================================================>]  9.669kB/9.669kB
+ 6c25da34e03f Verifying Checksum 
+ 6c25da34e03f Download complete 
+ 25b77f59fd95 Downloading [=================>                                 ]  39.41MB/111.3MB
+ a88782f92806 Downloading [==================================================>]     128B/128B
+ a88782f92806 Verifying Checksum 
+ a88782f92806 Download complete 
+ 25b77f59fd95 Downloading [====================================>              ]  80.97MB/111.3MB
+ d8d21be4bf02 Downloading [==================================================>]     169B/169B
+ d8d21be4bf02 Verifying Checksum 
+ d8d21be4bf02 Download complete 
+ 25b77f59fd95 Verifying Checksum 
+ 25b77f59fd95 Download complete 
+ 25b77f59fd95 Extracting [>                                                  ]  557.1kB/111.3MB
+ 6117bd39f23f Downloading [============================>                      ]  3.502kB/6.111kB
+ 6117bd39f23f Downloading [==================================================>]  6.111kB/6.111kB
+ 6117bd39f23f Verifying Checksum 
+ 6117bd39f23f Download complete 
+ 25b77f59fd95 Extracting [==>                                                ]  5.571MB/111.3MB
+ 509688edf37b Downloading [==================================================>]     185B/185B
+ 509688edf37b Verifying Checksum 
+ 509688edf37b Download complete 
+ 589002ba0eae Downloading [>                                                  ]  48.51kB/3.862MB
+ 589002ba0eae Verifying Checksum 
+ 589002ba0eae Download complete 
+ 589002ba0eae Extracting [>                                                  ]  65.54kB/3.862MB
+ 25b77f59fd95 Extracting [=====>                                             ]  12.26MB/111.3MB
+ 1d9cbdb003be Downloading [>                                                  ]   32.1kB/1.834MB
+ 1d9cbdb003be Download complete 
+ 589002ba0eae Extracting [==================================================>]  3.862MB/3.862MB
+ 25b77f59fd95 Extracting [========>                                          ]  18.38MB/111.3MB
+ 589002ba0eae Pull complete 
+ 1d9cbdb003be Extracting [>                                                  ]  32.77kB/1.834MB
+ e914c6e98e37 Downloading [==================================================>]     626B/626B
+ e914c6e98e37 Verifying Checksum 
+ e914c6e98e37 Download complete 
+ 1d9cbdb003be Extracting [==================================================>]  1.834MB/1.834MB
+ 1d9cbdb003be Extracting [==================================================>]  1.834MB/1.834MB
+ d631a49fb4f7 Downloading [==================================================>]     956B/956B
+ d631a49fb4f7 Verifying Checksum 
+ d631a49fb4f7 Download complete 
+ 8f7c784e2471 Downloading [==================================================>]     405B/405B
+ 8f7c784e2471 Verifying Checksum 
+ 8f7c784e2471 Download complete 
+ 25b77f59fd95 Extracting [===========>                                       ]  25.07MB/111.3MB
+ 25b77f59fd95 Extracting [==============>                                    ]  32.31MB/111.3MB
+ 44fa0a5a779f Downloading [==================================================>]   1.21kB/1.21kB
+ 44fa0a5a779f Verifying Checksum 
+ 44fa0a5a779f Download complete 
+ 98104829f3fe Downloading [==================================================>]  1.398kB/1.398kB
+ 98104829f3fe Verifying Checksum 
+ 98104829f3fe Download complete 
+ 0151c82f84a9 Downloading [>                                                  ]  212.4kB/20.25MB
+ 25b77f59fd95 Extracting [=================>                                 ]  39.55MB/111.3MB
+ 0151c82f84a9 Download complete 
+ 25b77f59fd95 Extracting [=====================>                             ]  46.79MB/111.3MB
+ 25b77f59fd95 Extracting [========================>                          ]  54.59MB/111.3MB
+ 25b77f59fd95 Extracting [==========================>                        ]   59.6MB/111.3MB
+ 25b77f59fd95 Extracting [=============================>                     ]  66.29MB/111.3MB
+ 25b77f59fd95 Extracting [=================================>                 ]  74.09MB/111.3MB
+ 25b77f59fd95 Extracting [====================================>              ]  80.77MB/111.3MB
+ 25b77f59fd95 Extracting [====================================>              ]  81.89MB/111.3MB
+ 25b77f59fd95 Extracting [======================================>            ]  84.67MB/111.3MB
+ 25b77f59fd95 Extracting [========================================>          ]  89.69MB/111.3MB
+ 25b77f59fd95 Extracting [===========================================>       ]  95.81MB/111.3MB
+ 25b77f59fd95 Extracting [============================================>      ]  98.04MB/111.3MB
+ 25b77f59fd95 Extracting [================================================>  ]    107MB/111.3MB
+ 25b77f59fd95 Extracting [==================================================>]  111.3MB/111.3MB
+ 1d9cbdb003be Pull complete 
+ e914c6e98e37 Extracting [==================================================>]     626B/626B
+ e914c6e98e37 Extracting [==================================================>]     626B/626B
+ 25b77f59fd95 Pull complete 
+ 6c25da34e03f Extracting [==================================================>]  9.669kB/9.669kB
+ 6c25da34e03f Extracting [==================================================>]  9.669kB/9.669kB
+ e914c6e98e37 Pull complete 
+ d631a49fb4f7 Extracting [==================================================>]     956B/956B
+ d631a49fb4f7 Extracting [==================================================>]     956B/956B
+ d631a49fb4f7 Pull complete 
+ 6c25da34e03f Pull complete 
+ 8f7c784e2471 Extracting [==================================================>]     405B/405B
+ 8f7c784e2471 Extracting [==================================================>]     405B/405B
+ a88782f92806 Extracting [==================================================>]     128B/128B
+ a88782f92806 Extracting [==================================================>]     128B/128B
+ a88782f92806 Pull complete 
+ 8f7c784e2471 Pull complete 
+ d8d21be4bf02 Extracting [==================================================>]     169B/169B
+ d8d21be4bf02 Extracting [==================================================>]     169B/169B
+ 44fa0a5a779f Extracting [==================================================>]   1.21kB/1.21kB
+ 44fa0a5a779f Extracting [==================================================>]   1.21kB/1.21kB
+ d8d21be4bf02 Pull complete 
+ 6117bd39f23f Extracting [==================================================>]  6.111kB/6.111kB
+ 6117bd39f23f Extracting [==================================================>]  6.111kB/6.111kB
+ 44fa0a5a779f Pull complete 
+ 98104829f3fe Extracting [==================================================>]  1.398kB/1.398kB
+ 98104829f3fe Extracting [==================================================>]  1.398kB/1.398kB
+ 98104829f3fe Pull complete 
+ 6117bd39f23f Pull complete 
+ 509688edf37b Extracting [==================================================>]     185B/185B
+ 509688edf37b Extracting [==================================================>]     185B/185B
+ 509688edf37b Pull complete 
+ db Pulled 
+ 0151c82f84a9 Extracting [>                                                  ]  229.4kB/20.25MB
+ 0151c82f84a9 Extracting [==============>                                    ]  5.964MB/20.25MB
+ 0151c82f84a9 Extracting [================================>                  ]  13.07MB/20.25MB
+ 0151c82f84a9 Extracting [=================================================> ]  20.19MB/20.25MB
+ 0151c82f84a9 Extracting [==================================================>]  20.25MB/20.25MB
+ 0151c82f84a9 Pull complete 
+ lb Pulled 
+ Network logifast-envios_frontend  Creating
+ Network logifast-envios_frontend  Created
+ Network logifast-envios_backend  Creating
+ Network logifast-envios_backend  Created
+ Volume "logifast-envios_db-data"  Creating
+ Volume "logifast-envios_db-data"  Created
+ Container logifast-envios-db-1  Creating
+ Container logifast-envios-db-1  Created
+ Container logifast-envios-envios-svc-2  Creating
+ Container logifast-envios-envios-svc-1  Creating
+ Container logifast-envios-envios-svc-2  Created
+ Container logifast-envios-envios-svc-1  Created
+ Container logifast-envios-lb-1  Creating
+ Container logifast-envios-lb-1  Created
+ Container logifast-envios-db-1  Starting
+ Container logifast-envios-db-1  Started
+ Container logifast-envios-db-1  Waiting
+ Container logifast-envios-db-1  Healthy
+ Container logifast-envios-envios-svc-1  Starting
+ Container logifast-envios-envios-svc-1  Started
+ Container logifast-envios-envios-svc-2  Starting
+ Container logifast-envios-envios-svc-2  Started
+ Container logifast-envios-envios-svc-1  Waiting
+ Container logifast-envios-envios-svc-2  Waiting
+ Container logifast-envios-envios-svc-1  Healthy
+ Container logifast-envios-envios-svc-2  Healthy
+ Container logifast-envios-lb-1  Starting
+ Container logifast-envios-lb-1  Started
+ Container logifast-envios-lb-1  Waiting
+ Container logifast-envios-db-1  Waiting
+ Container logifast-envios-envios-svc-1  Waiting
+ Container logifast-envios-envios-svc-2  Waiting
+ Container logifast-envios-db-1  Healthy
+ Container logifast-envios-envios-svc-1  Healthy
+ Container logifast-envios-envios-svc-2  Healthy
+ Container logifast-envios-lb-1  Healthy
+==> Estado de los servicios
+NAME                           IMAGE                               COMMAND                  SERVICE      CREATED          STATUS                    PORTS
+logifast-envios-db-1           postgres:16-alpine                  "docker-entrypoint.s…"   db           33 seconds ago   Up 33 seconds (healthy)   
+logifast-envios-envios-svc-1   duoc/jv0101-caso17-envios:154ec30   "java -jar /app/app.…"   envios-svc   33 seconds ago   Up 27 seconds (healthy)   8080/tcp
+logifast-envios-envios-svc-2   duoc/jv0101-caso17-envios:154ec30   "java -jar /app/app.…"   envios-svc   33 seconds ago   Up 27 seconds (healthy)   8080/tcp
+logifast-envios-lb-1           nginx:1.28-alpine                   "/docker-entrypoint.…"   lb           33 seconds ago   Up 5 seconds (healthy)    0.0.0.0:8080->80/tcp, [::]:8080->80/tcp

@@ -1,0 +1,55 @@
+==> 1. Endpoint de salud (http://localhost:8080/actuator/health)
+  OK  health = UP
+  OK  liveness = UP
+  OK  readiness = UP
+==> 2. Trazabilidad: versión y commit en ejecución (/actuator/info)
+{
+  "app": {
+    "name": "envios-svc",
+    "version": "1.0.0",
+    "commit": "154ec30d8e3f32647fde9a0d8a077c286ebd3c68",
+    "instance": "3c38ba25d9fd"
+  },
+  "java": {
+    "jvm": {
+      "name": "OpenJDK 64-Bit Server VM",
+      "vendor": "Eclipse Adoptium",
+      "version": "21.0.12.1+1-LTS"
+    },
+    "runtime": {
+      "name": "OpenJDK Runtime Environment",
+      "version": "21.0.12.1+1-LTS"
+    },
+    "vendor": {
+      "name": "Eclipse Adoptium",
+      "version": "Temurin-21.0.12.1+1"
+    },
+    "version": "21.0.12.1"
+  }
+}
+  OK  el servicio corre el commit esperado 154ec30d8e3f32647fde9a0d8a077c286ebd3c68
+==> 3. Imagen desplegada
+CONTAINER                      REPOSITORY                  TAG                 PLATFORM            IMAGE ID            SIZE                CREATED
+logifast-envios-envios-svc-1   duoc/jv0101-caso17-envios   154ec30             linux/amd64         b2d1059ef6ae        386MB               292 years ago
+logifast-envios-envios-svc-2   duoc/jv0101-caso17-envios   154ec30             linux/amd64         b2d1059ef6ae        386MB               292 years ago
+  OK  todas las réplicas usan la etiqueta 154ec30
+==> 4. Réplicas sanas
+  /logifast-envios-envios-svc-1 -> healthy
+  /logifast-envios-envios-svc-2 -> healthy
+  OK  2/2 réplicas healthy
+==> 5. Límites de recursos aplicados
+  /logifast-envios-envios-svc-1: cpus=0.75 memoria=512MiB pids=512 user=app read_only=true
+  /logifast-envios-envios-svc-2: cpus=0.75 memoria=512MiB pids=512 user=app read_only=true
+  OK  límites de CPU y memoria presentes en todas las réplicas
+==> 6. Prueba funcional del API a través del balanceador (CRUD)
+  OK  POST /api/envios -> 201 (id=1)
+  OK  GET /api/envios/1 -> 200 en todas las réplicas
+  OK  PUT /api/envios/1 -> 200
+  OK  DELETE /api/envios/1 -> 204
+  OK  GET /api/envios/1 -> 404 tras eliminar
+  OK  POST inválido -> 400 (validación activa)
+==> 7. Seguridad del despliegue
+  OK  /actuator/env no expuesto (404)
+  OK  consola H2 deshabilitada (404)
+
+VERIFICACIÓN POST-DEPLOY EXITOSA
