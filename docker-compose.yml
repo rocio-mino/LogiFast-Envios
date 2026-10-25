@@ -119,7 +119,7 @@ services:
   # Balanceador de carga (simula el ALB). Único punto de entrada publicado.
   # ---------------------------------------------------------------------------
   lb:
-    image: nginx:1.28-alpine
+    image: nginx:1.31-alpine
     ports:
       - "${PORT:-8080}:80"
     volumes:
