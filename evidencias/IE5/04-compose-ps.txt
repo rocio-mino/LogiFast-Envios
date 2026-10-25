@@ -1,0 +1,5 @@
+NAME                           IMAGE                               COMMAND                  SERVICE      CREATED              STATUS                        PORTS
+logifast-envios-db-1           postgres:16-alpine                  "docker-entrypoint.s…"   db           About a minute ago   Up About a minute (healthy)   
+logifast-envios-envios-svc-1   duoc/jv0101-caso17-envios:154ec30   "java -jar /app/app.…"   envios-svc   About a minute ago   Up 25 seconds (healthy)       8080/tcp
+logifast-envios-envios-svc-2   duoc/jv0101-caso17-envios:154ec30   "java -jar /app/app.…"   envios-svc   About a minute ago   Up About a minute (healthy)   8080/tcp
+logifast-envios-lb-1           nginx:1.28-alpine                   "/docker-entrypoint.…"   lb           About a minute ago   Up About a minute (healthy)   0.0.0.0:8080->80/tcp, [::]:8080->80/tcp

@@ -1,0 +1,3 @@
+# Los scripts deben tener fin de línea LF aunque se editen en Windows
+*.sh text eol=lf
+*.conf text eol=lf

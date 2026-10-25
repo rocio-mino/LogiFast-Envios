@@ -1,5 +1,11 @@
+
 target/
-*.class
+.git/
+.github/
 .idea/
 .vscode/
 *.iml
+*.class
+.env
+.env.*
+!.env.example
