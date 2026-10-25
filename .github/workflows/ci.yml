@@ -49,7 +49,7 @@ jobs:
 
     steps:
       - name: Descargar repositorio
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Configurar Java 21
         uses: actions/setup-java@v5
@@ -87,7 +87,7 @@ jobs:
 
     steps:
       - name: Checkout del repositorio
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Configurar Java 21
         uses: actions/setup-java@v5
@@ -186,7 +186,7 @@ jobs:
 
     steps:
       - name: Checkout del repositorio
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Calcular versión y etiquetas
         id: meta
@@ -276,7 +276,7 @@ jobs:
 
     steps:
       - name: Checkout del repositorio
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Descargar la imagen construida (misma imagen probada, no se reconstruye)
         uses: actions/download-artifact@v7
