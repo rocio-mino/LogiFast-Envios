@@ -514,6 +514,7 @@ Durante el proyecto LogiFast, lo que más me costó fue identificar qué pasos d
 
 ### Martín
 
+Durante el proceso del proyecto, lo que mas se me dificulto fue el tema de los Secrets y pasar las pruebas dentro de Github, pero gracias a las pruebas y error aprendi de apoco, lo que mejor se me dio fue la creacion de las imagenes y el uso de los comandos.
 
 ## Estado de la entrega
 
