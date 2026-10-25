@@ -22,7 +22,7 @@ services:
   # Base de datos compartida por todas las réplicas (simula Aurora PostgreSQL)
   # ---------------------------------------------------------------------------
   db:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_DB: ${DB_NAME:-envios}
       POSTGRES_USER: ${DB_USER:-envios}
