@@ -2,12 +2,12 @@
 # CI/CD - Envios (LogiFast caso17)
 #
 #   build-and-test ──┬──► image ──────┐
-#   (IE2: Maven,     │   (IE1/IE4:    │
-#    JUnit, Cucumber,│    build +     ├──► deploy  (IE4/IE5: Docker Compose,
-#    JaCoCo 100%)    │    SHA tag)    │     verificación, escalado, evidencias)
-#                    │                │
-#   security ────────┴────────────────┘
-#   (IE3: Snyk Open Source + Snyk Code; BLOQUEA si hay vulnerabilidades >= high)
+#   (Maven, JUnit,   │   (Docker +   │
+#    Cucumber,       │    etiqueta   ├──► deploy simulado + observabilidad
+#    JaCoCo/IE6)     │    por SHA)   │     (Prometheus, métricas CI, verificación)
+#                   │               │
+#   security ───────┴───────────────┘
+#   (Snyk ya configurado; controles de seguridad/compliance se completan con Martín)
 #
 # El deploy solo corre si las pruebas, la seguridad y la imagen terminaron OK.
 # =============================================================================
@@ -40,7 +40,7 @@ env:
 
 jobs:
   # ---------------------------------------------------------------------------
-  # IE2 — Compilación, pruebas unitarias/BDD y cobertura (trabajo de Rocío).
+  # EP3 IE6 (calidad) — Compilación, pruebas unitarias/BDD y cobertura (bloque de Rocío).
   # La construcción de la imagen (paso "Construir imagen Docker") se movió al
   # job "image" para construirla una sola vez, etiquetada con el SHA del commit.
   # ---------------------------------------------------------------------------
@@ -74,7 +74,7 @@ jobs:
           retention-days: 14
 
   # ---------------------------------------------------------------------------
-  # IE3 — Análisis de seguridad con Snyk (control bloqueante)
+  # Controles Snyk ya existentes; su revisión/complemento de cumplimiento corresponde a Martín (IE5/IE6).
   # ---------------------------------------------------------------------------
   security:
     name: Seguridad (Snyk)
@@ -172,7 +172,7 @@ jobs:
           retention-days: 30
 
   # ---------------------------------------------------------------------------
-  # IE1 / IE4 — Construcción de la imagen, etiquetada con el SHA del commit
+  # Construcción única de la imagen, etiquetada con el SHA del commit.
   # ---------------------------------------------------------------------------
   image:
     name: Imagen Docker (build + escaneo)
@@ -254,7 +254,7 @@ jobs:
           retention-days: 30
 
   # ---------------------------------------------------------------------------
-  # IE4 / IE5 — Despliegue automático en entorno simulado (Docker Compose)
+  # EP3 IE1/IE3/IE4 — Entorno simulado con observabilidad y métricas para dashboard.
   # ---------------------------------------------------------------------------
   deploy:
     name: Deploy (entorno simulado)
@@ -273,15 +273,24 @@ jobs:
       APP_REPLICAS: "2"
       PORT: "8080"
       EVIDENCE_DIR: evidencias-ci
+      PUSHGATEWAY_PORT: "9091"
+      PROMETHEUS_PORT: "9090"
+      METRICS_INSTANCE: github-actions
 
     steps:
       - name: Checkout del repositorio
         uses: actions/checkout@v5
 
       - name: Descargar la imagen construida (misma imagen probada, no se reconstruye)
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v6
         with:
           name: imagen-docker-${{ needs.image.outputs.tag }}
+
+      - name: Descargar reporte JaCoCo de la compilación validada
+        uses: actions/download-artifact@v6
+        with:
+          name: reportes-pruebas-${{ github.sha }}
+          path: target
 
       - name: Cargar imagen en Docker
         run: |
@@ -298,8 +307,27 @@ jobs:
       - name: Desplegar con Docker Compose
         run: SKIP_BUILD=1 bash scripts/deploy.sh 2>&1 | tee "${EVIDENCE_DIR}/01-deploy.log"
 
+      - name: Guardar métricas EP3 del despliegue
+        if: ${{ !cancelled() }}
+        run: |
+          mkdir -p "${EVIDENCE_DIR}"
+          curl --fail --show-error --silent --retry 10 --retry-connrefused --retry-delay 2 \
+            http://127.0.0.1:${PUSHGATEWAY_PORT}/metrics \
+            > "${EVIDENCE_DIR}/07-metricas-pushgateway.prom"
+
       - name: Verificación post-deploy (health, commit, réplicas, API)
         run: EXPECTED_COMMIT="${GITHUB_SHA}" bash scripts/verify-deploy.sh 2>&1 | tee "${EVIDENCE_DIR}/02-verificacion.log"
+
+      - name: Preparar jq para validar métricas
+        run: |
+          if ! command -v jq >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y jq
+          fi
+          jq --version
+
+      - name: Verificar métricas EP3 desde Prometheus
+        run: bash scripts/verify-ep3-metrics.sh 2>&1 | tee "${EVIDENCE_DIR}/11-verificacion-metricas.log"
 
       - name: Prueba de escalado y autorrecuperación
         run: bash scripts/test-scaling.sh 2>&1 | tee "${EVIDENCE_DIR}/03-escalado.log"
