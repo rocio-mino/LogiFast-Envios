@@ -40,3 +40,10 @@ copian aquí.
 | 4 | `IE5/04-docker-stats.png` | `docker stats --no-stream` con 3 réplicas: consumo frente a los límites |
 | 5 | `IE5/05-balanceo.png` | Varias llamadas `curl -i http://localhost:8080/api/envios` mostrando distintos `X-Served-By` |
 | 6 | `IE5/06-compose-down.png` | `docker compose down` deteniendo el entorno |
+
+
+# Evidencias EP3 — DOY0101 Ingeniería DevOps
+
+Las evidencias de la EP3 se separan por indicador oficial (IE1 a IE6), según la pauta de Evaluación Parcial N°3. Para el bloque de Rocío, usar las carpetas `EP3/IE1-Monitoreo`, `EP3/IE3-Dashboard`, `EP3/IE4-Documentacion` y `EP3/IE6-Bloqueos`. La lista exacta de capturas se encuentra en [`../docs/EP3/05_Evidencias.md`](../docs/EP3/05_Evidencias.md).
+
+No confundir los identificadores IE3/IE4/IE5 de la documentación histórica de EP2 con los indicadores oficiales de EP3.
