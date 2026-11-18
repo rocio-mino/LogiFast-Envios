@@ -1,5 +1,5 @@
 # =============================================================================
-# LogiFast · Envios — Orquestación con Docker Compose (IE3 · IE4 · IE5)
+# LogiFast · Envíos — Docker Compose base y observabilidad local EP3 (IE1 · IE3 · IE4 · IE6)
 #
 #   cliente ──► lb (nginx, :8080) ──► envios-svc × N réplicas ──► db (PostgreSQL)
 #               red "frontend"            redes frontend + backend    red "backend" (interna)
@@ -51,11 +51,11 @@ services:
     logging: *default-logging
 
   # ---------------------------------------------------------------------------
-  # Microservicio de Envíos (imagen del Dockerfile de IE1)
+  # Microservicio de Envíos (imagen construida por el Dockerfile)
   # ---------------------------------------------------------------------------
   envios-svc:
     build: .
-    # Etiqueta = SHA corto del commit en el pipeline (trazabilidad IE4); "1.0.0" en local
+    # Etiqueta = SHA corto del commit en el pipeline; "1.0.0" en local
     image: ${IMAGE_NAME:-duoc/jv0101-caso17-envios}:${IMAGE_TAG:-1.0.0}
     # Sin container_name ni ports: así se puede escalar a N réplicas detrás del balanceador
     environment:
@@ -102,7 +102,7 @@ services:
         reservations:
           cpus: "0.25"
           memory: 256M
-    # Seguridad del contenedor (IE3): el usuario sin privilegios "app" viene del
+    # Endurecimiento del contenedor: el usuario sin privilegios "app" viene del
     # Dockerfile; aquí se agrega sistema de archivos de solo lectura y sin capacidades de Linux
     read_only: true
     tmpfs:
@@ -145,10 +145,170 @@ services:
     restart: unless-stopped
     logging: *default-logging
 
+
+  # ---------------------------------------------------------------------------
+  # EP3 — Prometheus: métricas de Spring Boot, contenedores y ejecuciones CI.
+  # Escucha en localhost únicamente; no queda expuesto a la red externa.
+  # ---------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v3.16.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=7d
+      - --web.enable-lifecycle
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      - ./deploy/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - frontend
+      - observability
+    depends_on:
+      - pushgateway
+      - cadvisor
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 384M
+    logging: *default-logging
+
+  # ---------------------------------------------------------------------------
+  # EP3 — Pushgateway: conserva métricas puntuales calculadas por CI/CD:
+  # cobertura JaCoCo y duración del despliegue.
+  # ---------------------------------------------------------------------------
+  pushgateway:
+    image: prom/pushgateway:v1.11.4
+    command:
+      - --persistence.file=/pushgateway/metrics.db
+      - --persistence.interval=1m
+    ports:
+      - "127.0.0.1:${PUSHGATEWAY_PORT:-9091}:9091"
+    volumes:
+      - pushgateway-data:/pushgateway
+    networks:
+      - observability
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.10"
+          memory: 64M
+    logging: *default-logging
+
+  # ---------------------------------------------------------------------------
+  # EP3 — cAdvisor: métricas de CPU y memoria por contenedor Docker.
+  # Servicio de desarrollo local; requiere Docker Engine con soporte cgroups.
+  # ---------------------------------------------------------------------------
+  cadvisor:
+    image: ghcr.io/google/cadvisor:v0.60.6
+    command:
+      - --docker_only=true
+      - --housekeeping_interval=30s
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
+    networks:
+      - observability
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 160M
+    logging: *default-logging
+
+  # ---------------------------------------------------------------------------
+  # EP3 — Loki + Alloy: almacenamiento y recolección centralizada de logs.
+  # Alloy necesita acceso al socket Docker para descubrir y leer los contenedores.
+  # ---------------------------------------------------------------------------
+  loki:
+    image: grafana/loki:3.7.10
+    command:
+      - -config.file=/etc/loki/config.yml
+    volumes:
+      - ./deploy/observability/loki-config.yml:/etc/loki/config.yml:ro
+      - loki-data:/loki
+    networks:
+      - observability
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+    logging: *default-logging
+
+  alloy:
+    image: grafana/alloy:v1.21.3
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    volumes:
+      - ./deploy/observability/alloy-config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - alloy-data:/var/lib/alloy/data
+    networks:
+      - observability
+    depends_on:
+      - loki
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+    logging: *default-logging
+
+  # ---------------------------------------------------------------------------
+  # EP3 — Grafana: dashboard provisionado automáticamente (solo localhost).
+  # ---------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:13.3.0
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-logifast-local-only}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./deploy/observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - observability
+    depends_on:
+      - prometheus
+      - loki
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+    logging: *default-logging
+
 networks:
   frontend:
   backend:
     internal: true   # la base de datos no tiene salida ni es accesible desde fuera
+  observability:
 
 volumes:
   db-data:
+  prometheus-data:
+  pushgateway-data:
+  loki-data:
+  alloy-data:
+  grafana-data:

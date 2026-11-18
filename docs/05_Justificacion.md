@@ -1,8 +1,10 @@
 # ms-envios — Justificación del servicio y cobertura de requisitos
 
-**Caso caso17 — LogiFast** (una plataforma de transporte y logística de última milla) · EP01 JVY0101
+**Caso caso17 — LogiFast** (una plataforma de transporte y logística de última milla) · proyecto académico DOY0101 — Ingeniería DevOps
 
 Este documento justifica la existencia de **ms-envios** como microservicio independiente: qué requisitos del negocio cubre (funcionales, no funcionales y de seguridad), por qué está delimitado así (SRP), y qué tecnología AWS se usa para cada responsabilidad y **por qué**. Los diagramas que respaldan esta justificación están en `docs/diagramas/`.
+
+> **Alcance y estado de implementación:** este documento conserva una propuesta de arquitectura objetivo y la justificación de tecnologías para el dominio de seguimiento. No debe interpretarse como evidencia de que todas las integraciones descritas estén implementadas. El código actual de este repositorio implementa el CRUD de envíos con Spring Boot/JPA; el entorno Compose utiliza PostgreSQL. Las integraciones AWS (por ejemplo, DynamoDB, SQS, EventBridge, Lambda, ECS y CloudWatch) deben considerarse propuestas hasta que la segunda mitad de EP3 las despliegue y aporte evidencia verificable.
 
 ---
 
@@ -55,7 +57,7 @@ ms-envios mantiente el seguimiento en tiempo real del proceso: consume los event
 
 | Tecnología | Para qué se usa en ms-envios |
 |------------|------------------------------|
-| **Java 21 + Spring Boot 3.3** | Framework estándar de la asignatura: implementa la API REST, la lógica de negocio y el acceso a datos del servicio |
+| **Java 21 + Spring Boot 4.0.8** | Framework estándar de la asignatura: implementa la API REST, la lógica de negocio y el acceso a datos del servicio |
 | **Spring Data JPA** | Persistencia de las entidades del dominio en la base de datos propia (repositorios por entidad) |
 | **Bean Validation** | Validación de los payloads de entrada antes de procesar (jakarta.validation) |
 | **springdoc-openapi** | Documentación viva del contrato REST (Swagger UI / ReDoc) para consumidores y equipo |

@@ -22,8 +22,7 @@
         <springdoc.version>3.0.3</springdoc.version>
         <cucumber.version>7.34.9</cucumber.version>
 
-        <!-- IE3: versiones forzadas para corregir vulnerabilidades reportadas por Snyk
-             en dependencias transitivas que Spring Boot 4.0.8 todavía trae en versiones afectadas -->
+        <!-- Versiones transitivas fijadas para remediar vulnerabilidades identificadas por Snyk. -->
         <tomcat.version>11.0.27</tomcat.version>
         <jackson-bom.version>3.1.8</jackson-bom.version>
         <jackson-2-bom.version>2.21.8</jackson-2-bom.version>
@@ -35,6 +34,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <!-- Exporta las métricas Micrometer del microservicio en formato Prometheus. -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <scope>runtime</scope>
         </dependency>
 
         <dependency>
@@ -59,7 +64,7 @@
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
-        <!-- IE5: base de datos compartida por las réplicas en el entorno Docker Compose (simula Aurora PostgreSQL) -->
+        <!-- Driver PostgreSQL para la base de datos compartida del entorno Docker Compose. -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>

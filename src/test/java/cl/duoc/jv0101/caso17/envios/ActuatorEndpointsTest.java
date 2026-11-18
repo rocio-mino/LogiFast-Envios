@@ -2,18 +2,20 @@ package cl.duoc.jv0101.caso17.envios;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
+import static org.hamcrest.Matchers.containsString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * IE3/IE4/IE5: el healthcheck de Docker Compose, la verificación post-deploy
- * del pipeline y el balanceador dependen de estos endpoints. Si alguien los
- * rompe, el pipeline falla en la etapa de pruebas, antes de construir la imagen.
+ * El healthcheck de Docker Compose y la verificación post-deploy dependen de
+ * estos endpoints. También se verifica que Prometheus esté disponible para la
+ * red interna y que los endpoints sensibles sigan cerrados.
  */
 @SpringBootTest(properties = "APP_COMMIT=0123456789abcdef")
 @AutoConfigureMockMvc
@@ -50,6 +52,13 @@ class ActuatorEndpointsTest {
                 .andExpect(jsonPath("$.app.name").value("envios-svc"))
                 .andExpect(jsonPath("$.app.version").isNotEmpty())
                 .andExpect(jsonPath("$.app.commit").value("0123456789abcdef"));
+    }
+
+    @Test
+    void prometheusExponeMetricasJVM() throws Exception {
+        mockMvc.perform(get("/actuator/prometheus"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("jvm_memory_used_bytes")));
     }
 
     @Test

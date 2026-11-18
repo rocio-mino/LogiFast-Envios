@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# IE4 — Verificación post-despliegue.
+# Verificación post-despliegue y controles de exposición para EP3.
 # Falla (exit 1) si cualquiera de los chequeos no se cumple; en el pipeline eso
 # marca el despliegue como fallido.
 #
@@ -107,6 +107,9 @@ echo "==> 7. Seguridad del despliegue"
 code="$(curl -s -o /dev/null -w '%{http_code}' "${BASE_URL}/actuator/env")"
 [[ "${code}" == "404" ]] || fail "/actuator/env expuesto (${code})"
 ok "/actuator/env no expuesto (404)"
+code="$(curl -s -o /dev/null -w '%{http_code}' "${BASE_URL}/actuator/prometheus")"
+[[ "${code}" == "404" ]] || fail "/actuator/prometheus expuesto a través del balanceador (${code})"
+ok "/actuator/prometheus solo accesible desde red interna (404 en balanceador)"
 code="$(curl -s -o /dev/null -w '%{http_code}' "${BASE_URL}/h2-console")"
 [[ "${code}" == "404" ]] || fail "/h2-console expuesta (${code})"
 ok "consola H2 deshabilitada (404)"
