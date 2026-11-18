@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# IE5 — Prueba de escalado horizontal, balanceo y autorrecuperación.
+# Prueba de escalado horizontal, balanceo y autorrecuperación (capacidad base de entregas anteriores).
 #
 #   1. Escala envios-svc a SCALE_TO réplicas (por defecto 3) sin cortar el servicio.
 #   2. Comprueba que el balanceador reparte peticiones entre todas.
