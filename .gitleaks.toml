@@ -1,0 +1,18 @@
+# Configuración de Gitleaks (IE5 — política CMP-01 "secretos fuera del repositorio").
+# Usa todas las reglas por defecto de Gitleaks y solo exceptúa los valores de
+# ejemplo de desarrollo local documentados (no son credenciales reales: en el
+# pipeline y en Kubernetes las claves se generan aleatoriamente en cada entorno).
+# Cualquier excepción nueva debe justificarse en docs/EP3/07_Politicas_Cumplimiento.md.
+
+title = "LogiFast-Envios - escaneo de secretos"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Valores de ejemplo para desarrollo local (docker-compose.yml y .env.example)"
+regexes = [
+  '''envios_local_dev''',
+  '''logifast-local-only''',
+  '''change_this_local_password''',
+]
