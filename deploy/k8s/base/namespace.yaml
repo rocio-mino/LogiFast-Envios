@@ -1,0 +1,13 @@
+# Namespace del microservicio. Pod Security Admission en modo "restricted":
+# el clúster rechaza cualquier pod que corra como root, escale privilegios,
+# conserve capacidades de Linux o no use el perfil seccomp por defecto.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: logifast
+  labels:
+    app.kubernetes.io/part-of: logifast-envios
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/warn: restricted

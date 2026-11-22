@@ -1,0 +1,54 @@
+// Grafana Alloy en Kubernetes (adaptación de deploy/observability/alloy-config.alloy).
+// En lugar del socket Docker usa la API de Kubernetes para leer los logs de los pods
+// del namespace "logifast": no necesita hostPath ni privilegios.
+
+discovery.kubernetes "pods" {
+  role = "pod"
+
+  namespaces {
+    names = ["logifast"]
+  }
+}
+
+discovery.relabel "logifast" {
+  targets = discovery.kubernetes.pods.targets
+
+  rule {
+    source_labels = ["__meta_kubernetes_namespace"]
+    target_label  = "namespace"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_name"]
+    target_label  = "pod"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_container_name"]
+    target_label  = "container"
+  }
+
+  rule {
+    source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+    target_label  = "service_name"
+  }
+
+  // Misma etiqueta que en Docker Compose: el panel de logs del dashboard
+  // ({project="logifast-envios"}) funciona sin cambios.
+  rule {
+    target_label = "project"
+    replacement  = "logifast-envios"
+  }
+}
+
+loki.source.kubernetes "pods" {
+  targets    = discovery.relabel.logifast.output
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+  external_labels = { platform = "kubernetes" }
+}

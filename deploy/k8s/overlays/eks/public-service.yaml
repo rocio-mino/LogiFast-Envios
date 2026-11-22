@@ -1,0 +1,21 @@
+# Punto de entrada público del API (equivale al ALB del diseño Infra-AWS y al
+# nginx de Docker Compose). Solo publica el puerto de negocio 8080: Actuator
+# (8081) con health y métricas queda accesible únicamente dentro del clúster.
+apiVersion: v1
+kind: Service
+metadata:
+  name: envios-svc-public
+  namespace: logifast
+  labels:
+    app.kubernetes.io/name: envios-svc
+    app.kubernetes.io/part-of: logifast-envios
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: envios-svc
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

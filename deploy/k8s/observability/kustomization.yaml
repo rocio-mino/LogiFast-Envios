@@ -1,0 +1,31 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: observability
+
+resources:
+  - namespace.yaml
+  - observability.yaml
+
+# Las configuraciones viven como archivos versionados y se montan como ConfigMap.
+# Kustomize agrega un hash al nombre: si cambia un archivo, el Deployment se
+# reinicia automáticamente con la configuración nueva.
+configMapGenerator:
+  - name: prometheus-config
+    files:
+      - prometheus.yml
+  - name: loki-config
+    files:
+      - config.yml=loki-config.yml
+  - name: alloy-config
+    files:
+      - config.alloy
+  - name: grafana-datasources
+    files:
+      - grafana/provisioning/datasources.yml
+  - name: grafana-dashboard-providers
+    files:
+      - grafana/provisioning/dashboards.yml
+  - name: grafana-dashboards
+    files:
+      - grafana/dashboards/logifast-ep3-k8s.json
