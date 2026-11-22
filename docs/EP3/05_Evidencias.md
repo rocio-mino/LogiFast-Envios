@@ -1,4 +1,6 @@
-# IE1, IE3, IE4 e IE6 — Evidencias de Rocío
+# Evidencias EP3 (Rocío y Martín)
+
+## IE1, IE3, IE4 e IE6 — Evidencias de Rocío
 
 Guardar capturas reales y salidas de comandos. No usar imágenes de ejemplo ni datos simulados como evidencia de funcionamiento.
 
@@ -19,3 +21,29 @@ Guardar capturas reales y salidas de comandos. No usar imágenes de ejemplo ni d
 | IE6 | `IE6-Bloqueos/03-pr-temporal-cerrado.png` | PR de prueba cerrado sin fusionar el test fallido |
 
 Las evidencias de bloqueo deben capturarse de una rama temporal que no se integre a las ramas estables.
+
+## IE2, IE4, IE5 e IE6 — Evidencias de Martín
+
+Cada archivo debe venir de una ejecución real (GitHub Actions, AWS o SonarCloud). Además de las capturas, se conservan los artefactos de cada run: `evidencia-k8s-kind-<sha7>`, `evidencia-eks-<sha7>`, `evidencia-sonarcloud-<sha>` y `evidencia-auditoria-<sha>`.
+
+| Indicador | Evidencia | Qué debe demostrar |
+|---|---|---|
+| IE2 | `IE2-Despliegue/01-eks-cluster-consola.png` | Clúster `logifast-eks` activo con su node group en AWS |
+| IE2 | `IE2-Despliegue/02-kubectl-nodes-pods.png` | Nodos y pods de `logifast` y `observability` en ejecución, HPA y PDB |
+| IE2 | `IE2-Despliegue/03-api-publica.png` | API respondiendo por el NLB público; `/actuator/prometheus` en 404 |
+| IE2 | `IE2-Despliegue/04-pipeline-deploy-eks.png` | Job `Deploy cloud (AWS EKS)` en verde con su resumen de trazabilidad |
+| IE2 | `IE2-Despliegue/05-ecr-imagen-sha.png` | Imagen en ECR con etiqueta = SHA del commit |
+| IE2 | `IE2-Despliegue/06-grafana-eks.png` | Dashboard Kubernetes con métricas y logs del clúster EKS |
+| IE2 | `IE2-Despliegue/07-rollout-history.txt` | Revisión del Deployment asociada a commit e imagen |
+| IE2 | `IE2-Despliegue/08-kind-validacion.png` | Job `Kubernetes (validación en kind)` en verde |
+| IE2 | `IE2-Despliegue/09-recursos-eliminados.png` | Clúster, NLB y ECR eliminados al terminar |
+| IE4 | `IE4-Documentacion/03-pipeline-completo.png` | Grafo del workflow con todos los controles y despliegues |
+| IE5 | `IE5-Cumplimiento/01-sonarcloud-quality-gate.png` | Quality Gate *Passed* y métricas |
+| IE5 | `IE5-Cumplimiento/02-auditoria-cumplimiento.png` | Resumen CMP-01..08 y Gitleaks sin hallazgos |
+| IE5 | `IE5-Cumplimiento/03-branch-protection-develop.png`, `04-branch-protection-main.png` | Reglas de protección configuradas |
+| IE5 | `IE5-Cumplimiento/branch-protection-*.json` | Salida de `scripts/configure-branch-protection.sh check` |
+| IE5 | `IE5-Cumplimiento/05-pr-checks-obligatorios.png` | PR con checks requeridos |
+| IE6 | `IE6-Bloqueos/04-bloqueo-seguridad-snyk.png` | Snyk detecta la dependencia vulnerable y falla |
+| IE6 | `IE6-Bloqueos/05-bloqueo-seguridad-deploy-skipped.png` | Despliegue omitido tras la falla de seguridad |
+| IE6 | `IE6-Bloqueos/06-bloqueo-auditoria.png` | Auditoría rechaza un contenedor privilegiado |
+| IE6 | `IE6-Bloqueos/07-pr-seguridad-bloqueado.png`, `08-pr-seguridad-cerrado.png` | PR bloqueado y cerrado sin fusionar |
