@@ -204,7 +204,7 @@ services:
   # Servicio de desarrollo local; requiere Docker Engine con soporte cgroups.
   # ---------------------------------------------------------------------------
   cadvisor:
-    image: ghcr.io/google/cadvisor:v0.60.6
+    image: ghcr.io/google/cadvisor:v0.61.1
     command:
       - --docker_only=true
       - --housekeeping_interval=30s
