@@ -138,7 +138,15 @@ if [[ -n "${PUBLIC_SERVICE}" ]]; then
   done
   [[ "${code}" == "200" ]] || fail "http://${host}/api/envios -> ${code}"
   ok "http://${host}/api/envios -> 200"
-  code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "http://${host}/actuator/prometheus" || true)"
+  # Reintenta si el balanceador no responde (000): solo 404 es aceptable y
+  # cualquier otra respuesta HTTP (200, 401...) significa que el endpoint está expuesto.
+  code="000"
+  for _ in $(seq 1 12); do
+    code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "http://${host}/actuator/prometheus" || true)"
+    [[ "${code}" != "000" ]] && break
+    sleep 5
+  done
+  [[ "${code}" != "000" ]] || fail "el balanceador no respondió al verificar /actuator/prometheus"
   [[ "${code}" == "404" ]] || fail "métricas expuestas públicamente (${code})"
   ok "http://${host}/actuator/prometheus -> 404"
   echo "http://${host}" > "${EVIDENCE_DIR}/url-publica.txt"
