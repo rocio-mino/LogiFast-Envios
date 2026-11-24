@@ -142,25 +142,33 @@ El `port-forward` de Grafana debe ejecutarse en un equipo con navegador (termina
 
 Para usar `kubectl` desde Windows: instalar AWS CLI y kubectl, cargar las credenciales del lab (`aws configure` + `aws configure set aws_session_token ...`) y ejecutar `aws eks update-kubeconfig --name logifast-eks --region us-east-1`.
 
-### 5. Evidencias a guardar en `evidencias/EP3/IE2-Despliegue/`
+### 5. Evidencias en `evidencias/EP3/IE2-Despliegue/` (despliegue del 2026-11-24)
 
-| Archivo sugerido | Contenido |
+| Archivo | Contenido |
 |---|---|
-| `01-eks-cluster-consola.png` | Clúster `logifast-eks` *Active* y node group en la consola de AWS |
-| `02-kubectl-nodes-pods.png` | `kubectl get nodes` y `kubectl get pods,svc,hpa -n logifast` |
-| `03-api-publica.png` | Navegador o curl contra `http://<NLB>/api/envios` |
-| `04-pipeline-deploy-eks.png` | Run de Actions con `Deploy cloud (AWS EKS)` en verde y su resumen (commit, imagen ECR, digest, URL) |
-| `05-ecr-imagen-sha.png` | Repositorio ECR con la etiqueta = SHA del commit |
-| `06-grafana-eks.png` | Dashboard Kubernetes con datos del clúster EKS |
-| `07-rollout-history.txt` | Salida de `kubectl rollout history` (también viene en el artefacto) |
-| `08-kind-validacion.png` | Job `Kubernetes (validación en kind)` en verde |
-| `evidencia-eks-<sha7>/` | Artefacto descargado del run (JSON de trazabilidad, verificación, métricas, logs) |
+| `01-eks-cluster-consola.png` | Clúster `logifast-eks` *Active*, Kubernetes 1.37, rol `LabRole` |
+| `01b-eks-cluster-lista.png` | Lista de clústeres EKS de la cuenta |
+| `01c-eks-nodos-nodegroup.png` | 2 nodos t3.medium *Ready* y node group `ng-logifast` *Active* |
+| `01d-eks-creacion-cloudshell.png` | Salida de `./scripts/eks-cluster.sh create` en CloudShell |
+| `03-api-publica.png` | `GET /api/envios` respondiendo por el NLB público |
+| `03b-actuator-no-expuesto.png` | `/actuator/prometheus` responde 404 desde Internet |
+| `04-pipeline-deploy-eks.png` | Run con todos los controles y `Deploy cloud (AWS EKS)` en verde |
+| `04b-resumen-deploy-eks.png` | Resumen del job: commit, imagen ECR, digest y URL pública |
+| `05-ecr-imagen-sha.png` | Imágenes en ECR etiquetadas con el SHA de cada commit desplegado |
+| `06-grafana-eks.png`, `06a-grafana-eks-trafico.png` | Dashboard Kubernetes con tráfico, errores, latencia, CPU y memoria por pod, cobertura y duración del despliegue |
+| `07-rollout-history-y-recursos.png`, `07-rollout-history.txt` | Revisiones del Deployment asociadas a commit, imagen y ejecución; pods, servicios, HPA y PDB |
+| `08-kind-validacion.png` | Validación en kind en el PR |
+| `09-recursos-eliminados.txt` | Salida de `./scripts/eks-cluster.sh delete`: clúster, red, balanceador y ECR eliminados; lista de clústeres vacía |
+
+El primer despliegue (commit `e05d2ce`) quedó funcionando, pero la verificación marcó un falso negativo: el balanceador no respondió a tiempo al comprobar `/actuator/prometheus` (código `000`). Se corrigió `scripts/verify-k8s.sh` para reintentar y aceptar solo 404, y el segundo despliegue (commit `941bdf1`) pasó completo. Las dos revisiones quedan en `07-rollout-history.txt`.
 
 ### 6. Eliminar los recursos al terminar
 
 ```bash
 ./scripts/eks-cluster.sh delete      # namespaces → NLB, clúster, VPC (CloudFormation) y repositorio ECR
 ```
+
+Si el primer intento falla con *"cluster ... currently has an update in progress (409)"* (pasó en este proyecto justo después de borrar el node group), esperar a que `aws eks describe-cluster --name logifast-eks --query cluster.status` vuelva a `ACTIVE` y relanzar el mismo comando: eksctl retoma el stack pendiente.
 
 Después poner `CLOUD_DEPLOY_ENABLED=false` y verificar en la consola que no queden clústeres EKS, instancias EC2, balanceadores ni volúmenes EBS del proyecto.
 
