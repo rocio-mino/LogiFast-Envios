@@ -82,7 +82,8 @@ Alternativa manual: *Settings* → *Branches* → *Add branch protection rule* c
 
 | Archivo sugerido | Contenido |
 |---|---|
-| `01-sonarcloud-quality-gate.png` | Proyecto en SonarCloud con el Quality Gate en *Passed* y sus métricas |
+| `01-sonarcloud-quality-gate.png` | Log del job SonarCloud: `QUALITY GATE STATUS: PASSED` para el PR #34 |
+| `01b-sonarcloud-condiciones.png` | Condiciones del Quality Gate con umbral y valor real (seguridad, mantenibilidad, duplicación, hotspots revisados) |
 | `02-auditoria-cumplimiento.png` | Resumen del job `Auditoría de cumplimiento` (tabla CMP-01..08 + Gitleaks) |
 | `03-branch-protection-develop.png`, `04-branch-protection-main.png` | Reglas configuradas en GitHub |
 | `branch-protection-develop.json`, `branch-protection-main.json` | Generados por `configure-branch-protection.sh check` |
