@@ -18,7 +18,7 @@ El servicio atiende un único dominio de negocio y tiene una sola razón de camb
 
 | Componente | Tecnología |
 |---|---|
-| Framework | Spring Boot 4.0.8 |
+| Framework | Spring Boot 4.0.10 |
 | Lenguaje | Java 21 |
 | Build | Maven |
 | Persistencia | Spring Data JPA + H2 (in-memory) |

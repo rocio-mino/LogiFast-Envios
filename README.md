@@ -5,7 +5,7 @@ Microservicio correspondiente al **caso 17 — LogiFast**, una plataforma de tra
 | | |
 |---|---|
 | **Asignatura** | DOY0101 — Ingeniería DevOps |
-| **Stack** | Spring Boot 4.0.8, Java 21, Maven, Spring Data JPA, H2 / PostgreSQL y springdoc-openapi |
+| **Stack** | Spring Boot 4.0.10, Java 21, Maven, Spring Data JPA, H2 / PostgreSQL y springdoc-openapi |
 | **Calidad** | Pruebas automatizadas, Cucumber y JaCoCo |
 | **Contenedores** | Docker y Docker Compose (balanceador nginx, réplicas y PostgreSQL) |
 | **CI/CD** | GitHub Actions, Snyk, Dependabot y despliegue automático trazable por SHA |
@@ -388,6 +388,9 @@ El job `deploy` declara `needs: [build-and-test, security, sonarcloud, complianc
   Jackson 2 y PostgreSQL en el `pom.xml`. La única vulnerabilidad sin corrección
   publicada (JAXB, usada internamente por Hibernate) queda como excepción auditada y
   con fecha de expiración en [`.snyk`](.snyk).
+- **EP3:** en el PR #34, Snyk bloqueó el pipeline por dos vulnerabilidades *high* nuevas
+  en Spring Framework 7.0.9 (`spring-beans`, `spring-web`). Se corrigió subiendo a
+  **Spring Boot 4.0.10** (Spring Framework 7.0.11); ver `docs/EP3/08_Bloqueo_Seguridad.md`.
 
 Política completa y configuración de secretos: [`docs/06_Seguridad_Escalabilidad.md`](docs/06_Seguridad_Escalabilidad.md).
 

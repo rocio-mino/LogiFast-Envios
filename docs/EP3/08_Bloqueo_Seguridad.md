@@ -12,6 +12,17 @@ Complementa `03_Validacion_Calidad.md` (Rocío), donde se demostró el bloqueo p
 | El despliegue en la nube no tenía validación previa de los manifiestos | Nuevo job `Kubernetes (validación en kind)`, requerido por `deploy-eks` |
 | Pasos con `continue-on-error` restantes | Solo *Snyk Monitor* y la publicación SARIF, que son informativos. La política CMP-06 lo verifica en cada ejecución: si alguien agrega `continue-on-error` a un control, la auditoría falla |
 
+## Bloqueos reales durante el PR #34
+
+Al abrir el PR de este bloque, dos controles lo bloquearon antes de cualquier prueba provocada:
+
+| Control | Hallazgo | Corrección |
+|---|---|---|
+| `Seguridad (Snyk)` — Snyk Open Source | Dos vulnerabilidades **high** publicadas recientemente en Spring Framework 7.0.9 (`spring-beans`: *Incorrect Behavior Order: Validate Before Canonicalize*; `spring-web`: *Allocation of Resources Without Limits or Throttling*), traídas por Spring Boot 4.0.8 | Subir `spring-boot-starter-parent` a **4.0.10** (Spring Framework 7.0.11), la versión que Snyk indica como corrección. Las versiones fijadas de Tomcat (11.0.27) y Jackson (2.21.8 / 3.1.8) coinciden con las que gestiona Boot 4.0.10. |
+| `Auditoría de cumplimiento` — Gitleaks | 2 hallazgos de la regla `curl-auth-user` en el workflow: el paso que consulta la API de SonarCloud pasaba el token con `curl -u "${SONAR_TOKEN}:"` | No se agregó una excepción: se cambió el paso para entregar el token a curl por la entrada estándar (`--config -`), así nunca aparece en la línea de comandos. Gitleaks ahora corre con `--verbose` para mostrar cada hallazgo (con el secreto ocultado). |
+
+En ambos casos el despliegue quedó *skipped* hasta corregir, y la corrección pasó por los mismos controles.
+
 ## Matriz de bloqueo
 
 | Falla crítica | Job que falla | Jobs que no se ejecutan |
@@ -89,6 +100,9 @@ Verificación previa local (sin GitHub): `python3 scripts/audit-compliance.py` d
 
 | Archivo sugerido | Contenido |
 |---|---|
+| `01-pr34-snyk-spring.png` | Bloqueo real: Snyk Open Source con las vulnerabilidades de Spring Framework 7.0.9 |
+| `02-pr34-gitleaks.png` | Bloqueo real: Gitleaks con `leaks found: 2` |
+| `03-pr34-deploy-skipped.png` | Grafo del run con los dos controles en rojo y `Deploy` *skipped* |
 | `04-bloqueo-seguridad-snyk.png` | Paso Snyk Open Source con Log4Shell y código de salida 1 |
 | `05-bloqueo-seguridad-deploy-skipped.png` | Grafo del workflow: `Seguridad (Snyk)` en rojo y `Deploy` *skipped* |
 | `06-bloqueo-auditoria.png` | Job `Auditoría de cumplimiento` con el incumplimiento CMP-03 |
