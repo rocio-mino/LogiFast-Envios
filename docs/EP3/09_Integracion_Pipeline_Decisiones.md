@@ -71,16 +71,17 @@ Se toman mirando el dashboard de Grafana (Compose o Kubernetes) y las consultas 
 
 ## Resultados obtenidos en las validaciones
 
-> Completar con valores reales de las ejecuciones. No usar valores de ejemplo.
+Valores tomados de las ejecuciones reales (capturas en `evidencias/EP3/`).
 
-| Validación | Ejecución (link al run) | Resultado |
+| Validación | Ejecución | Resultado |
 |---|---|---|
-| Pipeline completo en verde (PR de Martín) | | |
-| Quality Gate SonarCloud | | Estado y métricas: |
-| Auditoría de cumplimiento | | __/__ controles cumplidos, hallazgos Gitleaks: |
-| Snyk Container (critical) | | |
-| Validación kind | | Duración del despliegue: __ s |
-| Deploy EKS | | URL pública, digest de la imagen, duración: __ s |
-| Bloqueo por seguridad (caso A) | | Job fallido y deploy *skipped* |
-| Bloqueo por auditoría (caso B) | | |
+| Pipeline completo en verde (PR #34) | [run 45308943633](https://github.com/rocio-mino/LogiFast-Envios/actions/runs/45308943633) | 10 checks en verde en 4 min 21 s; `Deploy cloud (AWS EKS)` *skipped* por ser PR |
+| Quality Gate SonarCloud | mismo run | *Passed*: seguridad y mantenibilidad A, duplicación 0,0 %, hotspots revisados 100 % |
+| Auditoría de cumplimiento | mismo run | 71/71 controles cumplidos; Gitleaks 0 hallazgos en todo el historial |
+| Snyk Container (critical) | mismo run | Sin vulnerabilidades críticas en la imagen |
+| Validación kind | mismo run | `VERIFICACIÓN KUBERNETES EXITOSA`: health, commit, CRUD, exposición, métricas y logs |
+| Bloqueo real por seguridad | run del commit `4f7a4bd` (PR #34) | Snyk Open Source: 2 vulnerabilidades *high* en Spring Framework 7.0.9 → job en rojo, deploy *skipped*; corregido con Spring Boot 4.0.10 |
+| Bloqueo real por secretos | mismo run | Gitleaks: `leaks found: 2` (regla `curl-auth-user`) → job en rojo, deploy *skipped*; corregido sin excepción |
 | Bloqueo por calidad (Rocío) | ver `03_Validacion_Calidad.md` | BUILD FAILURE, deploy *skipped* |
+| Deploy EKS, intento 1 (commit `e05d2ce`) | [run 45469040928](https://github.com/rocio-mino/LogiFast-Envios/actions/runs/45469040928) | Aplicación desplegada y respondiendo; verificación en rojo por falso negativo del balanceador (código `000`) |
+| Deploy EKS, intento 2 (commit `941bdf1`) | [run 45473434057](https://github.com/rocio-mino/LogiFast-Envios/actions/runs/45473434057) | Éxito: 2 réplicas en 2 nodos, imagen `logifast-envios:941bdf1` (digest `sha256:2e3042c6…`) en ECR, API pública 200 y `/actuator/prometheus` 404, cobertura 100 % y duración visibles en Grafana |

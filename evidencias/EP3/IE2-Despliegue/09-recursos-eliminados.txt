@@ -1,0 +1,23 @@
+# ./scripts/eks-cluster.sh delete — AWS CloudShell, us-east-1, 2026-11-24
+# Intento 1 (20:09–20:21 UTC): namespaces y node group eliminados; el stack del clúster
+# falló con "Cannot delete because cluster logifast-eks currently has an update in progress
+# (Status Code: 409)". El balanceador ya no existía (describe-load-balancers vacío).
+# Se esperó a que el clúster volviera a ACTIVE y se relanzó el borrado:
+
+LogiFast-Envios $ ./scripts/eks-cluster.sh delete
+Cuenta 624514793964 · región us-east-1 · clúster logifast-eks
+==> 1. Eliminando namespaces (libera el Network Load Balancer creado por el Service)
+==> 2. Eliminando el clúster y su VPC (CloudFormation)
+2026-11-24 20:23:48 [ℹ]  deleting EKS cluster "logifast-eks"
+2026-11-24 20:23:48 [!]  stack's status of nodegroup named eksctl-logifast-eks-cluster is DELETE_FAILED
+2026-11-24 20:23:48 [ℹ]  deleted 0 Fargate profile(s)
+2026-11-24 20:23:49 [ℹ]  cleaning up AWS load balancers created by Kubernetes objects of Kind Service, Ingress, or Gateway
+2026-11-24 20:23:49 [ℹ]  1 task: { delete cluster control plane "logifast-eks" }
+2026-11-24 20:23:49 [ℹ]  will delete stack "eksctl-logifast-eks-cluster"
+2026-11-24 20:23:49 [ℹ]  waiting for stack "eksctl-logifast-eks-cluster" to get deleted
+2026-11-24 20:28:18 [✔]  all cluster resources were deleted
+==> 3. Eliminando el repositorio ECR logifast-envios
+==> Verificación de recursos remanentes
+--------------
+|ListClusters|
++------------+
