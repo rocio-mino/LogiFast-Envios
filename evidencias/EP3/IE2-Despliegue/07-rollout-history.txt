@@ -1,0 +1,5 @@
+# kubectl -n logifast rollout history deployment/envios-svc  (2026-11-24, clúster logifast-eks, us-east-1)
+deployment.apps/envios-svc
+REVISION  CHANGE-CAUSE
+1         commit e05d2ce8a43e51c44a9f19d37b5e3a78f58cefd5 imagen 624514793964.dkr.ecr.us-east-1.amazonaws.com/logifast-envios:e05d2ce run https://github.com/rocio-mino/LogiFast-Envios/actions/runs/45469040928
+2         commit 941bdf16fa61aa3bae44aee84208adaa769dfaff imagen 624514793964.dkr.ecr.us-east-1.amazonaws.com/logifast-envios:941bdf1 run https://github.com/rocio-mino/LogiFast-Envios/actions/runs/45473434057
