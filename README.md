@@ -4,11 +4,14 @@ Microservicio correspondiente al **caso 17 — LogiFast**, una plataforma de tra
 
 | | |
 |---|---|
-| **Asignatura** | JVY0101 — Java: Diseño y Construcción de Soluciones Nativas en Nube |
-| **Stack** | Spring Boot 4.0.8, Java 21, Maven, Spring Data JPA, H2 / PostgreSQL y springdoc-openapi |
+| **Asignatura** | DOY0101 — Ingeniería DevOps |
+| **Stack** | Spring Boot 4.0.10, Java 21, Maven, Spring Data JPA, H2 / PostgreSQL y springdoc-openapi |
 | **Calidad** | Pruebas automatizadas, Cucumber y JaCoCo |
 | **Contenedores** | Docker y Docker Compose (balanceador nginx, réplicas y PostgreSQL) |
 | **CI/CD** | GitHub Actions, Snyk, Dependabot y despliegue automático trazable por SHA |
+| **Observabilidad EP3** | Prometheus, Grafana, Loki, Grafana Alloy, cAdvisor y Pushgateway (entorno local y Kubernetes) |
+| **Nube EP3** | Kubernetes (Kustomize) validado en kind y desplegado en AWS EKS con ECR |
+| **Cumplimiento EP3** | SonarCloud (Quality Gate), Gitleaks, auditoría de políticas y protección de ramas |
 
 ## Responsabilidad del microservicio (SRP)
 
@@ -29,7 +32,7 @@ La página presenta información del microservicio y proporciona enlaces a las s
 - **Swagger UI:** `http://localhost:8080/swagger-ui/index.html`
 - **OpenAPI (YAML):** `http://localhost:8080/v3/api-docs.yaml`
 - **ReDoc:** `http://localhost:8080/redoc.html`
-- **Consola H2:** `http://localhost:8080/h2-console`
+- **Consola H2:** `http://localhost:8080/h2-console` (solo al ejecutar la aplicación directamente con el perfil local; en Docker Compose queda deshabilitada).
 
 ## Endpoints REST
 
@@ -61,8 +64,9 @@ El proyecto incorpora **Spring Boot Actuator** para consultar el estado de salud
 | GET | `/actuator/health/liveness` | Indica si el proceso está vivo. |
 | GET | `/actuator/health/readiness` | Indica si el servicio está listo para recibir tráfico (incluye la base de datos). Lo usa el healthcheck de Docker Compose. |
 | GET | `/actuator/info` | Nombre, versión, **commit** e instancia que respondió (trazabilidad del despliegue). |
+| GET | `/actuator/prometheus` | Métricas de JVM, HTTP y aplicación en formato Prometheus (uso interno). |
 
-Solo se exponen `health` e `info`; el resto de los endpoints de Actuator no está publicado.
+La aplicación expone `health`, `info` y `prometheus` a nivel interno. El endpoint Prometheus se consume desde la red privada de Docker; no se publica directamente en el host y nginx devuelve `404` para `/actuator/prometheus` a través del balanceador. `scripts/verify-deploy.sh` comprueba esta restricción.
 
 Para comprobar el endpoint cuando la aplicación se encuentra ejecutándose localmente en el puerto 8080:
 
@@ -82,6 +86,24 @@ Una respuesta satisfactoria devuelve HTTP 200 y un JSON similar a:
 
 El estado `UP` confirma que la aplicación reporta un estado operativo; no implica por sí solo que se hayan comprobado todas las dependencias externas.
 
+## Evaluación Parcial 3 — DOY0101 Ingeniería DevOps
+
+La EP3 amplía el pipeline existente con observabilidad y métricas. La pila local se compone de Prometheus, Grafana, Loki, Grafana Alloy, cAdvisor y Pushgateway. La guía de ejecución y los límites de este entorno se encuentran en [`docs/EP3/`](docs/EP3/).
+
+Para iniciar el stack completo de desarrollo (incluye microservicio, PostgreSQL y observabilidad):
+
+```bash
+# Primero: copiar .env.example a .env y cambiar GRAFANA_ADMIN_PASSWORD.
+mvn verify
+bash scripts/deploy.sh
+```
+
+Interfaces locales: Grafana `http://localhost:3000`, Prometheus `http://localhost:9090`, Pushgateway `http://localhost:9091`. Prometheus, Grafana y Pushgateway se enlazan a `127.0.0.1`; Loki no publica un puerto al host y el endpoint Actuator Prometheus queda para la red interna Docker. La retención local de métricas y logs está limitada a siete días.
+
+La pila local no crea recursos de AWS ni genera cargos en la cuenta estudiante.
+
+El despliegue orquestado en la nube (IE2) usa los manifiestos Kubernetes de [`deploy/k8s/`](deploy/k8s/). Cada PR los valida en un clúster kind efímero. Con `CLOUD_DEPLOY_ENABLED=true` el pipeline los despliega en Amazon EKS (AWS Academy). Procedimiento, costos y eliminación de recursos: [`docs/EP3/06_Despliegue_Kubernetes.md`](docs/EP3/06_Despliegue_Kubernetes.md). Políticas de cumplimiento y bloqueo: [`docs/EP3/07`](docs/EP3/07_Politicas_Cumplimiento.md) y [`docs/EP3/08`](docs/EP3/08_Bloqueo_Seguridad.md).
+
 ## Documentación del proyecto
 
 La documentación complementaria se encuentra en la carpeta [`docs/`](docs/):
@@ -92,9 +114,12 @@ La documentación complementaria se encuentra en la carpeta [`docs/`](docs/):
 - [`docs/03_Pruebas.md`](docs/03_Pruebas.md): pruebas unitarias, cobertura y Cucumber.
 - [`docs/04_Despliegue.md`](docs/04_Despliegue.md): instrucciones de despliegue.
 - [`docs/05_Justificacion.md`](docs/05_Justificacion.md): justificación del servicio, RF/RNF, seguridad, stack tecnológico y tecnologías AWS.
-- [`docs/06_Seguridad_Escalabilidad.md`](docs/06_Seguridad_Escalabilidad.md): Dependabot, Snyk, política de bloqueo y parámetros de escalabilidad (IE3).
-- [`docs/07_CICD_Despliegue.md`](docs/07_CICD_Despliegue.md): pipeline, despliegue automático, trazabilidad y prueba de bloqueo (IE4).
-- [`docs/08_Orquestacion.md`](docs/08_Orquestacion.md): Docker Compose con balanceador, réplicas, healthchecks, escalado y comandos (IE5).
+- [`docs/06_Seguridad_Escalabilidad.md`](docs/06_Seguridad_Escalabilidad.md): antecedentes de Dependabot, Snyk, seguridad y escalabilidad de entregas anteriores.
+- [`docs/07_CICD_Despliegue.md`](docs/07_CICD_Despliegue.md): antecedentes del pipeline, despliegue automático y trazabilidad.
+- [`docs/08_Orquestacion.md`](docs/08_Orquestacion.md): base Docker Compose con balanceador, réplicas, healthchecks y escalado.
+
+**Importante:** los indicadores que aparecen en algunos documentos anteriores pertenecen a entregas previas. Para esta Evaluación Parcial 3 se debe seguir la pauta DOY0101 vigente y la documentación específica de [`docs/EP3/`](docs/EP3/), que cubre IE1 a IE6.
+- [`docs/EP3/`](docs/EP3/): observabilidad, métricas, dashboard, validaciones de calidad, despliegue en Kubernetes/EKS, políticas de cumplimiento, bloqueos y evidencias de la Evaluación Parcial 3.
 - [`evidencias/`](evidencias/): capturas y logs de cada indicador.
 - [`docs/diagramas/`](docs/diagramas/): diagramas C4 de contexto, contenedores y componentes, secuencia e infraestructura AWS, además de diagramas de Docker, Docker Compose e integración.
 
@@ -318,37 +343,43 @@ El pipeline está en [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 - Un Pull Request dirigido a `develop` o a `main` (incluidos los de Dependabot).
 - Ejecución manual desde la pestaña *Actions* (`workflow_dispatch`).
 
-### Etapas del pipeline
+### Etapas del pipeline existente (base EP2, extendido para EP3)
 
 ```mermaid
 flowchart LR
     A[push / PR] --> B[build-and-test<br/>mvn verify]
     A --> C[security<br/>Snyk]
-    B --> D[image<br/>docker build :SHA]
-    B --> E
-    C --> E
-    D --> E[deploy<br/>Docker Compose]
+    A --> S[sonarcloud<br/>Quality Gate]
+    A --> Q[compliance-audit<br/>políticas + Gitleaks]
+    B --> D[image<br/>docker build :SHA<br/>Snyk Container]
+    D --> K[k8s-validate<br/>kind]
+    B & C & S & Q & D --> E[deploy<br/>Docker Compose]
+    E & K --> X[deploy-eks<br/>AWS EKS]
 ```
 
 | Etapa (job) | IE | Qué hace | Bloquea el deploy si… |
 |---|---|---|---|
 | `build-and-test` | IE2 | Descarga el repositorio, configura Java 21, ejecuta `mvn verify` (JUnit, Cucumber, JaCoCo) y publica los reportes | falla una prueba o no se cumple la cobertura |
 | `Seguridad (Snyk)` | IE3 | Snyk Open Source (dependencias) y Snyk Code (análisis estático); publica hallazgos y registra el proyecto para alertas | hay vulnerabilidades **high/critical** o falta `SNYK_TOKEN` |
-| `Imagen Docker (build + escaneo)` | IE1 · IE4 | Construye la imagen con el `Dockerfile`, etiquetada con el SHA del commit y labels OCI; Snyk Container como alerta | la imagen no compila |
+| `SonarCloud (Quality Gate)` | EP3 IE5 · IE6 | Análisis de calidad y seguridad del código; espera el Quality Gate | el Quality Gate queda en `ERROR` o falta `SONAR_TOKEN` |
+| `Auditoría de cumplimiento` | EP3 IE5 · IE6 | `scripts/audit-compliance.py` (políticas CMP-01..08) y Gitleaks sobre todo el historial | se incumple una política o se detecta un secreto |
+| `Imagen Docker (build + escaneo)` | IE1 · IE4 | Construye la imagen con el `Dockerfile`, etiquetada con el SHA del commit y labels OCI; Snyk Container **bloqueante** en severidad critical (EP3) | la imagen no compila o tiene vulnerabilidades críticas |
+| `Kubernetes (validación en kind)` | EP3 IE2 | Despliega los manifiestos de `deploy/k8s/` en un clúster kind con la imagen construida y verifica salud, commit, API, métricas y logs | un pod no arranca o falla una verificación |
 | `Deploy (entorno simulado)` | IE4 · IE5 | Despliega con Docker Compose la misma imagen construida, verifica salud, commit y API, prueba el escalado y guarda evidencias | — (falla si la verificación falla) |
+| `Deploy cloud (AWS EKS)` | EP3 IE2 | Publica la imagen en ECR y despliega en EKS (push a `develop`/`main` con `CLOUD_DEPLOY_ENABLED=true`) | — (requiere todos los anteriores en verde) |
 
-El job `deploy` declara `needs: [build-and-test, security, image]`: si las pruebas
-o el análisis de seguridad fallan, **no se despliega**.
+El job `deploy` declara `needs: [build-and-test, security, sonarcloud, compliance-audit, image]` y `deploy-eks` además
+`k8s-validate` y `deploy`: si cualquier control falla, **no se despliega**.
 
-### Seguridad (IE3)
+### Seguridad preexistente de EP2 (Snyk)
 
 - **Dependabot** (`.github/dependabot.yml`): revisa semanalmente Maven, GitHub
   Actions, las imágenes del `Dockerfile` y de `docker-compose.yml`, y abre Pull Requests hacia `develop`.
 - **Snyk**: análisis de dependencias y de código en cada ejecución, con umbral de
-  bloqueo `high`. El escaneo de la imagen genera alertas sin bloquear.
+  bloqueo `high`. Desde la EP3 el escaneo de la imagen también bloquea (severidad critical).
 - **Contenedores endurecidos**: usuario sin privilegios `app` (Dockerfile),
   sistema de archivos de solo lectura, sin capacidades de Linux, base de datos en
-  red interna, solo `health` e `info` expuestos.
+  red interna, health e info para diagnóstico y Prometheus solo por red privada; nginx bloquea las métricas desde el balanceador.
 - **Remediación guiada por Snyk:** el primer análisis bloqueó el pipeline con 27
   vulnerabilidades (3 críticas) en Spring Framework 6.2, Tomcat, Jackson, Logback,
   Micrometer y el driver de PostgreSQL. Spring Boot 3.5 ya no recibe correcciones
@@ -357,10 +388,13 @@ o el análisis de seguridad fallan, **no se despliega**.
   Jackson 2 y PostgreSQL en el `pom.xml`. La única vulnerabilidad sin corrección
   publicada (JAXB, usada internamente por Hibernate) queda como excepción auditada y
   con fecha de expiración en [`.snyk`](.snyk).
+- **EP3:** en el PR #34, Snyk bloqueó el pipeline por dos vulnerabilidades *high* nuevas
+  en Spring Framework 7.0.9 (`spring-beans`, `spring-web`). Se corrigió subiendo a
+  **Spring Boot 4.0.10** (Spring Framework 7.0.11); ver `docs/EP3/08_Bloqueo_Seguridad.md`.
 
 Política completa y configuración de secretos: [`docs/06_Seguridad_Escalabilidad.md`](docs/06_Seguridad_Escalabilidad.md).
 
-### Escalabilidad (IE3 · IE5)
+### Escalabilidad base de EP2
 
 | Parámetro | Valor |
 |---|---|
@@ -370,7 +404,7 @@ Política completa y configuración de secretos: [`docs/06_Seguridad_Escalabilid
 | Conexiones a la base / hilos de Tomcat | 10 / 100 por réplica |
 | Balanceo | nginx round-robin, con reintento en otra réplica y detección dinámica de réplicas |
 
-### Despliegue y trazabilidad (IE4)
+### Despliegue y trazabilidad base de EP2
 
 1. Cada imagen se etiqueta con el **SHA corto del commit** y lleva labels OCI
    (`revision`, `version`, `source` y el enlace al run de Actions).
@@ -507,16 +541,28 @@ Las decisiones finales, la comprobación de los comandos y la validación del fu
 
 Para los indicadores IE3, IE4 e IE5 se utilizó además Claude (Anthropic) como apoyo para proponer la configuración de Dependabot y Snyk, el job de despliegue, el archivo Docker Compose con balanceador y los scripts de verificación, y para redactar una primera versión de la documentación técnica (`docs/06` a `docs/08`). Las configuraciones fueron revisadas, ejecutadas en GitHub Actions y ajustadas por el equipo. Las reflexiones individuales se redactaron sin IA. Referencia: Anthropic. (2026). *Claude* [Modelo de lenguaje]. https://claude.ai
 
+Para la EP3 también se utilizó **ChatGPT (OpenAI)** como apoyo para analizar la pauta, revisar y proponer configuraciones de Micrometer/Prometheus, Grafana/Loki/Alloy, preparar consultas del dashboard y revisar scripts de integración CI/CD. El equipo debe validar estas propuestas ejecutando Maven, Docker Compose y GitHub Actions, y ajustar cualquier resultado que no coincida con el comportamiento observado. ChatGPT no se utilizó para redactar las conclusiones ni las reflexiones individuales. Referencia: OpenAI. (2026). *ChatGPT* [Modelo de lenguaje]. https://chatgpt.com
+
+En el bloque EP3 de Martín (IE2, IE4, IE5 e IE6 de seguridad) se utilizó Claude (Anthropic) como apoyo para proponer los manifiestos Kubernetes, los scripts de despliegue, verificación y auditoría, los jobs del pipeline y un borrador de `docs/EP3/06`–`09`. El equipo revisó y ejecutó estas configuraciones. Las conclusiones y reflexiones individuales se redactaron sin IA. Referencia: Anthropic. (2026). *Claude* [Modelo de lenguaje]. https://claude.ai
+
 ## Reflexiones individuales
 
+
 ### Rocío
-Durante el proyecto LogiFast, lo que más me costó fue identificar qué pasos debía agregar al workflow de GitHub Actions. Ejecutar el pipeline me ayudó a comprender mejor cómo se automatizan las pruebas con Maven y la construcción de la imagen Docker. Aunque aprendí más sobre su funcionamiento, todavía necesito practicar para poder configurar un workflow desde cero de forma autónoma.
+Durante la EP3 participé en la ampliación del microservicio LogiFast mediante herramientas de observabilidad y monitoreo.
+Implementé la integración de Prometheus, Grafana, Loki y Alloy para visualizar métricas y centralizar los registros.
+También trabajé en un dashboard para supervisar solicitudes HTTP, errores, latencia y recursos de los contenedores.
+Integré la publicación de métricas de cobertura JaCoCo y duración del despliegue mediante Pushgateway.
+Realicé validaciones que permitieron comprobar una cobertura del 100% y un despliegue local de 28 segundos.
+Además, ejecuté una prueba controlada que demostró que Maven detiene la construcción cuando falla una prueba.
+Durante el proceso aprendí a resolver problemas de configuración e integración entre diferentes herramientas DevOps.
+Esta experiencia me permitió comprender la importancia de la observabilidad y de automatizar controles de calidad.
 
 ### Martín
 
 Durante el proceso del proyecto, lo que mas se me dificulto fue el tema de los Secrets y pasar las pruebas dentro de Github, pero gracias a las pruebas y error aprendi de apoco, lo que mejor se me dio fue la creacion de las imagenes y el uso de los comandos.
 
-## Estado de la entrega
+## Estado histórico de la EP2 (no corresponde a la pauta EP3)
 
 | Indicador | Estado | Evidencia |
 |---|---|---|

@@ -1,0 +1,69 @@
+# Prometheus dentro de Kubernetes (adaptación del deploy/observability/prometheus.yml
+# de Docker Compose). Mantiene el nombre de job "logifast-envios" para que el
+# dashboard y scripts/verify-ep3-metrics.sh sirvan en ambos entornos.
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: logifast-k8s
+
+scrape_configs:
+  # Réplicas de envios-svc descubiertas por la API de Kubernetes (incluye las que
+  # cree el HPA). Solo se consulta el puerto interno "management" (8081).
+  - job_name: logifast-envios
+    metrics_path: /actuator/prometheus
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names: [logifast]
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+        regex: envios-svc
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_container_port_name]
+        regex: management
+        action: keep
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+      - source_labels: [__meta_kubernetes_pod_node_name]
+        target_label: node
+
+  # CPU y memoria por contenedor (cAdvisor integrado en el kubelet de cada nodo),
+  # consultado a través del API server con el token del ServiceAccount.
+  - job_name: kubernetes-cadvisor
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    authorization:
+      credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    kubernetes_sd_configs:
+      - role: node
+    relabel_configs:
+      - target_label: __address__
+        replacement: kubernetes.default.svc:443
+      - source_labels: [__meta_kubernetes_node_name]
+        regex: (.+)
+        target_label: __metrics_path__
+        replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
+      - source_labels: [__meta_kubernetes_node_name]
+        target_label: node
+    metric_relabel_configs:
+      # Solo las series que usa el dashboard y solo de los namespaces del proyecto
+      - source_labels: [__name__]
+        regex: container_cpu_usage_seconds_total|container_memory_working_set_bytes
+        action: keep
+      - source_labels: [namespace]
+        regex: logifast|observability
+        action: keep
+
+  # Métricas puntuales que publica el pipeline (cobertura y duración del despliegue)
+  - job_name: pushgateway
+    honor_labels: true
+    static_configs:
+      - targets: [pushgateway:9091]
+
+  - job_name: prometheus
+    static_configs:
+      - targets: [localhost:9090]

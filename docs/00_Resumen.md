@@ -14,11 +14,11 @@ administra los datos y la lógica del dominio de Envíos del caso caso17 (LogiFa
 
 El servicio atiende un único dominio de negocio y tiene una sola razón de cambio. Entrega su propia base de datos en memoria (H2) y expone su API REST de forma independiente, garantizando **bajo acoplamiento** y **alta cohesión** dentro de la arquitectura de microservicios del caso.
 
-## Stack tecnológico
+## Stack tecnológico (versión actual del repositorio)
 
 | Componente | Tecnología |
 |---|---|
-| Framework | Spring Boot 3.3 |
+| Framework | Spring Boot 4.0.10 |
 | Lenguaje | Java 21 |
 | Build | Maven |
 | Persistencia | Spring Data JPA + H2 (in-memory) |

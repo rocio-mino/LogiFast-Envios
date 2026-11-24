@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Recursos del microservicio (namespace "logifast").
+namespace: logifast
+
+resources:
+  - namespace.yaml
+  - postgres.yaml
+  - envios-svc.yaml
+
+# Valores por defecto; el pipeline los reemplaza (behavior: merge) con el SHA
+# del commit y la URL de la ejecución de GitHub Actions.
+configMapGenerator:
+  - name: envios-build-info
+    literals:
+      - commit=local
+      - version=1.0.0
+      - pipeline-run=local

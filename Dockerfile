@@ -17,13 +17,17 @@ FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
-# Ejecutar la aplicación con un usuario sin privilegios
-RUN groupadd --system app \
-    && useradd --system --gid app --home-dir /app app
+# Ejecutar la aplicación con un usuario sin privilegios.
+# UID/GID numéricos fijos (10001): Kubernetes solo puede verificar runAsNonRoot
+# (Pod Security Standard "restricted") cuando el USER de la imagen es numérico.
+RUN groupadd --system --gid 10001 app \
+    && useradd --system --uid 10001 --gid app --home-dir /app app
 
-COPY --from=build --chown=app:app /app/target/*.jar /app/app.jar
+# El JAR queda como propiedad de root (solo lectura para el usuario de ejecución):
+# el proceso no puede modificar su propio código.
+COPY --from=build /app/target/*.jar /app/app.jar
 
-USER app
+USER 10001:10001
 
 EXPOSE 8080
 

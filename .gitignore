@@ -13,3 +13,10 @@ snyk-*.sarif
 
 # Las evidencias de la EP2 sí se versionan
 !evidencias/**/*.log
+
+# Overlay generado por el pipeline en cada despliegue (imagen y commit)
+deploy/k8s/overlays/release/
+evidencias-k8s/
+evidencias-eks/
+evidencias-sonar/
+evidencias-auditoria/

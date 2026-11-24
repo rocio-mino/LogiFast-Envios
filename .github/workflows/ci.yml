@@ -1,15 +1,18 @@
 # =============================================================================
 # CI/CD - Envios (LogiFast caso17)
 #
-#   build-and-test ──┬──► image ──────┐
-#   (IE2: Maven,     │   (IE1/IE4:    │
-#    JUnit, Cucumber,│    build +     ├──► deploy  (IE4/IE5: Docker Compose,
-#    JaCoCo 100%)    │    SHA tag)    │     verificación, escalado, evidencias)
-#                    │                │
-#   security ────────┴────────────────┘
-#   (IE3: Snyk Open Source + Snyk Code; BLOQUEA si hay vulnerabilidades >= high)
+#   CONTROLES BLOQUEANTES (cualquiera en rojo detiene la entrega)
+#   build-and-test ─────► image ──────► k8s-validate ─────────────┐
+#   (Maven, JUnit,        (Docker +     (kind: manifiestos,       │
+#    Cucumber, JaCoCo)     SHA + Snyk    Pod Security restricted, │
+#                          Container)    observabilidad)          │
+#   security (Snyk Open Source + Code) ──┐                        │
+#   sonarcloud (Quality Gate) ───────────┼──► deploy (Compose) ───┴──► deploy-eks
+#   compliance-audit (políticas + Gitleaks)┘   entorno simulado         AWS EKS (push a
+#                                                                       develop/main)
 #
-# El deploy solo corre si las pruebas, la seguridad y la imagen terminaron OK.
+# deploy y deploy-eks solo corren si TODOS los controles terminaron OK.
+# Políticas y criterios: docs/EP3/07_Politicas_Cumplimiento.md
 # =============================================================================
 name: CI/CD - Envios
 
@@ -40,7 +43,7 @@ env:
 
 jobs:
   # ---------------------------------------------------------------------------
-  # IE2 — Compilación, pruebas unitarias/BDD y cobertura (trabajo de Rocío).
+  # EP3 IE6 (calidad) — Compilación, pruebas unitarias/BDD y cobertura (bloque de Rocío).
   # La construcción de la imagen (paso "Construir imagen Docker") se movió al
   # job "image" para construirla una sola vez, etiquetada con el SHA del commit.
   # ---------------------------------------------------------------------------
@@ -74,7 +77,9 @@ jobs:
           retention-days: 14
 
   # ---------------------------------------------------------------------------
-  # IE3 — Análisis de seguridad con Snyk (control bloqueante)
+  # EP3 IE5/IE6 (seguridad) — Snyk Open Source + Snyk Code, bloqueantes >= high.
+  # Los únicos pasos con continue-on-error son informativos (registro en Snyk y
+  # publicación SARIF); nunca un análisis: si un análisis falla, el job falla.
   # ---------------------------------------------------------------------------
   security:
     name: Seguridad (Snyk)
@@ -127,7 +132,7 @@ jobs:
             --json-file-output=snyk-code.json
 
       - name: Snyk Monitor - registrar el proyecto para alertas continuas
-        # Snyk avisa por correo si aparece una vulnerabilidad nueva en estas dependencias
+        # Informativo (no es un control): Snyk avisa si aparece una vulnerabilidad nueva
         if: ${{ github.event_name == 'push' && steps.snyk_deps.outcome == 'success' }}
         continue-on-error: true
         run: snyk monitor --project-name=logifast-envios --target-reference="${GITHUB_REF_NAME}"
@@ -172,7 +177,149 @@ jobs:
           retention-days: 30
 
   # ---------------------------------------------------------------------------
-  # IE1 / IE4 — Construcción de la imagen, etiquetada con el SHA del commit
+  # EP3 IE5/IE6 — SonarCloud (SonarQube Cloud): calidad, cobertura, duplicación,
+  # bugs, vulnerabilidades y security hotspots. El análisis ESPERA el resultado
+  # del Quality Gate (sonar.qualitygate.wait) y el job falla si no se cumple.
+  # ---------------------------------------------------------------------------
+  sonarcloud:
+    name: SonarCloud (Quality Gate)
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION || 'rocio-mino' }}
+      SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY || 'rocio-mino_LogiFast-Envios' }}
+
+    steps:
+      - name: Checkout del repositorio (historial completo para detectar código nuevo)
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Java 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: maven
+
+      - name: Verificar que existe SONAR_TOKEN
+        run: |
+          if [ -z "${SONAR_TOKEN}" ]; then
+            echo "::error title=Falta SONAR_TOKEN::Configura el secreto SONAR_TOKEN (Actions y Dependabot). Sin Quality Gate no se permite desplegar."
+            exit 1
+          fi
+
+      - name: Caché de SonarCloud
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+
+      - name: Análisis SonarCloud y espera del Quality Gate (bloqueante)
+        run: |
+          mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
+            -Dsonar.organization="${SONAR_ORGANIZATION}" \
+            -Dsonar.projectKey="${SONAR_PROJECT_KEY}" \
+            -Dsonar.qualitygate.wait=true \
+            -Dsonar.qualitygate.timeout=300
+
+      - name: Resultado del Quality Gate (evidencia)
+        if: ${{ !cancelled() && hashFiles('target/sonar/report-task.txt') != '' }}
+        run: |
+          mkdir -p evidencias-sonar
+          dashboard="$(grep '^dashboardUrl=' target/sonar/report-task.txt | cut -d= -f2-)"
+          ce_url="$(grep '^ceTaskUrl=' target/sonar/report-task.txt | cut -d= -f2-)"
+          # El token se entrega a curl por stdin (--config -): nunca aparece en la línea de comandos
+          sonar_api() { printf 'user = "%s:"\n' "${SONAR_TOKEN}" | curl -fsS --config - "$1"; }
+          analysis="$(sonar_api "${ce_url}" | jq -r .task.analysisId)"
+          sonar_api "https://sonarcloud.io/api/qualitygates/project_status?analysisId=${analysis}" \
+            | tee evidencias-sonar/quality-gate.json | jq .
+          status="$(jq -r .projectStatus.status evidencias-sonar/quality-gate.json)"
+          {
+            echo "## SonarCloud — Quality Gate: **${status}**"
+            echo ""
+            echo "| Métrica | Comparador | Umbral | Valor | Estado |"
+            echo "|---|---|---|---|---|"
+            jq -r '.projectStatus.conditions[] | "| \(.metricKey) | \(.comparator) | \(.errorThreshold) | \(.actualValue // "-") | \(.status) |"' evidencias-sonar/quality-gate.json
+            echo ""
+            echo "Detalle: ${dashboard}"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Guardar evidencia del Quality Gate
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: evidencia-sonarcloud-${{ github.sha }}
+          path: |
+            evidencias-sonar/
+            target/sonar/report-task.txt
+          if-no-files-found: ignore
+          retention-days: 30
+
+  # ---------------------------------------------------------------------------
+  # EP3 IE5/IE6 — Auditoría automatizada de cumplimiento:
+  #   - scripts/audit-compliance.py: políticas CMP-01..CMP-08 (secretos, imagen,
+  #     Kubernetes, exposición, controles del pipeline, excepciones, trazabilidad).
+  #   - Gitleaks: secretos en el código y en todo el historial de Git.
+  # Cualquier incumplimiento hace fallar el job y bloquea los despliegues.
+  # ---------------------------------------------------------------------------
+  compliance-audit:
+    name: Auditoría de cumplimiento
+    runs-on: ubuntu-latest
+    env:
+      GITLEAKS_VERSION: "8.30.1"
+
+    steps:
+      - name: Checkout del repositorio (historial completo para Gitleaks)
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Políticas de cumplimiento (scripts/audit-compliance.py)
+        run: |
+          python3 -m pip install --quiet --disable-pip-version-check pyyaml
+          python3 scripts/audit-compliance.py --report-dir evidencias-auditoria
+
+      - name: Instalar Gitleaks (binario verificado con checksum)
+        if: ${{ !cancelled() }}
+        run: |
+          base="https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}"
+          file="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -fsSLO "${base}/${file}"
+          curl -fsSLO "${base}/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          sha256sum --check --ignore-missing "gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          tar -xzf "${file}" gitleaks
+          sudo install gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+
+      - name: Gitleaks - secretos en el historial de Git (bloqueante)
+        if: ${{ !cancelled() }}
+        run: |
+          mkdir -p evidencias-auditoria
+          gitleaks git . --config .gitleaks.toml --redact --verbose --exit-code 1 \
+            --report-format sarif --report-path evidencias-auditoria/gitleaks.sarif
+
+      - name: Resumen de Gitleaks
+        if: ${{ !cancelled() && hashFiles('evidencias-auditoria/gitleaks.sarif') != '' }}
+        run: |
+          n="$(jq '[.runs[].results[]] | length' evidencias-auditoria/gitleaks.sarif)"
+          {
+            echo "## Gitleaks (secretos en el historial)"
+            echo ""
+            echo "Hallazgos: **${n}** — umbral de bloqueo: 1 hallazgo."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Guardar reportes de auditoría
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: evidencia-auditoria-${{ github.sha }}
+          path: evidencias-auditoria/
+          if-no-files-found: ignore
+          retention-days: 30
+
+  # ---------------------------------------------------------------------------
+  # Construcción única de la imagen, etiquetada con el SHA del commit.
   # ---------------------------------------------------------------------------
   image:
     name: Imagen Docker (build + escaneo)
@@ -214,22 +361,40 @@ jobs:
           docker image ls "${IMAGE_NAME}"
           docker image inspect "${IMAGE_NAME}:${TAG}" --format '{{json .Config.Labels}}' | jq .
 
-      - name: Snyk Container - vulnerabilidades de la imagen (alerta, no bloquea)
+      # EP3 IE6: antes era solo alerta (continue-on-error). Ahora una vulnerabilidad
+      # CRÍTICA en la imagen detiene el pipeline: la imagen no llega a ningún entorno.
+      - name: Snyk Container - bloquea si la imagen tiene vulnerabilidades críticas
         id: snyk_container
-        if: ${{ env.SNYK_TOKEN != '' }}
-        continue-on-error: true
         env:
           TAG: ${{ steps.meta.outputs.tag }}
         run: |
+          if [ -z "${SNYK_TOKEN}" ]; then
+            echo "::error title=Falta SNYK_TOKEN::Sin escaneo de la imagen no se permite desplegar."
+            exit 1
+          fi
           npm install --global snyk
           snyk container test "${IMAGE_NAME}:${TAG}" \
             --file=Dockerfile \
-            --severity-threshold=high \
+            --severity-threshold=critical \
             --json-file-output=snyk-container.json
 
-      - name: Alerta por vulnerabilidades en la imagen base
-        if: ${{ steps.snyk_container.outcome == 'failure' }}
-        run: echo "::warning title=Snyk Container::La imagen tiene vulnerabilidades >= high en el sistema operativo base. Revisar reporte y actualizar la imagen base (Dependabot docker)."
+      - name: Resumen del escaneo de la imagen
+        if: ${{ !cancelled() && steps.snyk_container.outcome != 'skipped' }}
+        env:
+          OUTCOME: ${{ steps.snyk_container.outcome }}
+        run: |
+          {
+            echo "## Snyk Container (imagen ${IMAGE_NAME}:${GITHUB_SHA::7})"
+            echo ""
+            echo "| Umbral de bloqueo | Resultado |"
+            echo "|---|---|"
+            echo "| critical | ${OUTCOME} |"
+            if [ -f snyk-container.json ]; then
+              echo ""
+              echo "Vulnerabilidades por severidad (todas):"
+              jq -r '[.vulnerabilities[]?.severity] | group_by(.) | map("- \(.[0]): \(length)") | .[]' snyk-container.json || true
+            fi
+          } >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Exportar imagen para el job de deploy
         env:
@@ -254,11 +419,86 @@ jobs:
           retention-days: 30
 
   # ---------------------------------------------------------------------------
-  # IE4 / IE5 — Despliegue automático en entorno simulado (Docker Compose)
+  # EP3 IE2 — Validación del despliegue Kubernetes en un clúster efímero (kind).
+  # Aplica los mismos manifiestos que EKS con la imagen recién construida:
+  # Pod Security "restricted", probes, réplicas, métricas en Prometheus y logs
+  # en Loki. Si falla, no hay despliegue en la nube.
+  # ---------------------------------------------------------------------------
+  k8s-validate:
+    name: Kubernetes (validación en kind)
+    needs: [build-and-test, image]
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      IMAGE_TAG: ${{ needs.image.outputs.tag }}
+      EVIDENCE_DIR: evidencias-k8s
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v5
+
+      - name: Descargar la imagen construida (misma imagen probada)
+        uses: actions/download-artifact@v6
+        with:
+          name: imagen-docker-${{ needs.image.outputs.tag }}
+
+      - name: Descargar reporte JaCoCo de la compilación validada
+        uses: actions/download-artifact@v6
+        with:
+          name: reportes-pruebas-${{ github.sha }}
+          path: target
+
+      - name: Crear clúster kind
+        uses: helm/kind-action@ea822c7bf1874f08e5a491df991c228edffc3376 # v1.15.2
+        with:
+          cluster_name: logifast
+
+      - name: Cargar la imagen en el clúster
+        run: |
+          gunzip -c image.tar.gz | docker load
+          rm image.tar.gz
+          kind load docker-image "${IMAGE_NAME}:${IMAGE_TAG}" --name logifast
+
+      - name: Desplegar en Kubernetes (kind)
+        env:
+          VERSION: ${{ needs.image.outputs.version }}
+        run: |
+          K8S_TARGET=kind IMAGE_NAME="${IMAGE_NAME}" IMAGE_TAG="${IMAGE_TAG}" \
+          GIT_COMMIT="${GITHUB_SHA}" APP_VERSION="${VERSION}" \
+          PIPELINE_RUN="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+          bash scripts/k8s-deploy.sh 2>&1 | tee k8s-deploy.log
+
+      - name: Verificación post-deploy en Kubernetes
+        run: |
+          mkdir -p "${EVIDENCE_DIR}"
+          mv k8s-deploy.log "${EVIDENCE_DIR}/01-k8s-deploy.log"
+          EXPECTED_COMMIT="${GITHUB_SHA}" DEPLOY_ENVIRONMENT=kind \
+            bash scripts/verify-k8s.sh 2>&1 | tee "${EVIDENCE_DIR}/02-verificacion-k8s.log"
+
+      - name: Estado del clúster (evidencia)
+        if: ${{ !cancelled() }}
+        run: |
+          mkdir -p "${EVIDENCE_DIR}"
+          kubectl get all,cm,secret,pdb,hpa,networkpolicy -n logifast -o wide > "${EVIDENCE_DIR}/03-recursos-logifast.txt" 2>&1 || true
+          kubectl get all -n observability -o wide > "${EVIDENCE_DIR}/04-recursos-observability.txt" 2>&1 || true
+          kubectl describe deployment envios-svc -n logifast > "${EVIDENCE_DIR}/05-describe-envios.txt" 2>&1 || true
+          kubectl get events -A --sort-by=.lastTimestamp > "${EVIDENCE_DIR}/06-eventos.txt" 2>&1 || true
+
+      - name: Subir evidencias de Kubernetes
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: evidencia-k8s-kind-${{ needs.image.outputs.tag }}
+          path: evidencias-k8s/
+          retention-days: 30
+
+  # ---------------------------------------------------------------------------
+  # EP3 IE1/IE3/IE4 — Entorno simulado con observabilidad y métricas para dashboard.
+  # Solo corre si pasaron pruebas, Snyk, SonarCloud, auditoría e imagen.
   # ---------------------------------------------------------------------------
   deploy:
     name: Deploy (entorno simulado)
-    needs: [build-and-test, security, image]
+    needs: [build-and-test, security, sonarcloud, compliance-audit, image]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment:
@@ -273,15 +513,24 @@ jobs:
       APP_REPLICAS: "2"
       PORT: "8080"
       EVIDENCE_DIR: evidencias-ci
+      PUSHGATEWAY_PORT: "9091"
+      PROMETHEUS_PORT: "9090"
+      METRICS_INSTANCE: github-actions
 
     steps:
       - name: Checkout del repositorio
         uses: actions/checkout@v5
 
       - name: Descargar la imagen construida (misma imagen probada, no se reconstruye)
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v6
         with:
           name: imagen-docker-${{ needs.image.outputs.tag }}
+
+      - name: Descargar reporte JaCoCo de la compilación validada
+        uses: actions/download-artifact@v6
+        with:
+          name: reportes-pruebas-${{ github.sha }}
+          path: target
 
       - name: Cargar imagen en Docker
         run: |
@@ -298,8 +547,27 @@ jobs:
       - name: Desplegar con Docker Compose
         run: SKIP_BUILD=1 bash scripts/deploy.sh 2>&1 | tee "${EVIDENCE_DIR}/01-deploy.log"
 
+      - name: Guardar métricas EP3 del despliegue
+        if: ${{ !cancelled() }}
+        run: |
+          mkdir -p "${EVIDENCE_DIR}"
+          curl --fail --show-error --silent --retry 10 --retry-connrefused --retry-delay 2 \
+            http://127.0.0.1:${PUSHGATEWAY_PORT}/metrics \
+            > "${EVIDENCE_DIR}/07-metricas-pushgateway.prom"
+
       - name: Verificación post-deploy (health, commit, réplicas, API)
         run: EXPECTED_COMMIT="${GITHUB_SHA}" bash scripts/verify-deploy.sh 2>&1 | tee "${EVIDENCE_DIR}/02-verificacion.log"
+
+      - name: Preparar jq para validar métricas
+        run: |
+          if ! command -v jq >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y jq
+          fi
+          jq --version
+
+      - name: Verificar métricas EP3 desde Prometheus
+        run: bash scripts/verify-ep3-metrics.sh 2>&1 | tee "${EVIDENCE_DIR}/11-verificacion-metricas.log"
 
       - name: Prueba de escalado y autorrecuperación
         run: bash scripts/test-scaling.sh 2>&1 | tee "${EVIDENCE_DIR}/03-escalado.log"
@@ -354,3 +622,171 @@ jobs:
       - name: Apagar el entorno simulado
         if: ${{ always() }}
         run: docker compose down --volumes --remove-orphans
+
+  # ---------------------------------------------------------------------------
+  # EP3 IE2 — Despliegue en la nube: Amazon EKS (AWS Academy Learner Lab).
+  # Solo en push a develop/main (o ejecución manual), después de que TODOS los
+  # controles y el entorno simulado terminaron OK. Se activa con la variable de
+  # repositorio CLOUD_DEPLOY_ENABLED=true mientras el clúster existe; las
+  # credenciales temporales del lab van en secretos (nunca en Git).
+  # Procedimiento: docs/EP3/06_Despliegue_Kubernetes.md
+  # ---------------------------------------------------------------------------
+  deploy-eks:
+    name: Deploy cloud (AWS EKS)
+    needs: [build-and-test, security, sonarcloud, compliance-audit, image, k8s-validate, deploy]
+    if: ${{ github.event_name != 'pull_request' && vars.CLOUD_DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: aws-eks
+      url: ${{ steps.verify.outputs.public_url }}
+    concurrency:
+      group: deploy-eks
+      cancel-in-progress: false
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+      EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME || 'logifast-eks' }}
+      ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY || 'logifast-envios' }}
+      IMAGE_TAG: ${{ needs.image.outputs.tag }}
+      EVIDENCE_DIR: evidencias-eks
+      METRICS_SERVER_VERSION: v0.8.1
+
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v5
+
+      - name: Verificar credenciales temporales de AWS Academy
+        env:
+          HAS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID != '' && secrets.AWS_SECRET_ACCESS_KEY != '' && secrets.AWS_SESSION_TOKEN != '' }}
+        run: |
+          if [ "${HAS_KEY}" != "true" ]; then
+            echo "::error title=Faltan credenciales AWS::Configura AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY y AWS_SESSION_TOKEN (AWS Details del Learner Lab)."
+            exit 1
+          fi
+
+      - name: Configurar credenciales AWS
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Identidad y clúster
+        run: |
+          aws sts get-caller-identity --query '{cuenta:Account, rol:Arn}' --output table \
+            || { echo "::error title=Sesión AWS expirada::Inicia el Learner Lab y actualiza los 3 secretos AWS_*"; exit 1; }
+          aws eks describe-cluster --name "${EKS_CLUSTER_NAME}" \
+            --query 'cluster.{nombre:name, version:version, estado:status, endpoint:endpoint}' --output table
+          aws eks update-kubeconfig --name "${EKS_CLUSTER_NAME}" --region "${AWS_REGION}"
+          kubectl get nodes -o wide
+
+      - name: Descargar la imagen aprobada por los controles
+        uses: actions/download-artifact@v6
+        with:
+          name: imagen-docker-${{ needs.image.outputs.tag }}
+
+      - name: Descargar reporte JaCoCo de la compilación validada
+        uses: actions/download-artifact@v6
+        with:
+          name: reportes-pruebas-${{ github.sha }}
+          path: target
+
+      - name: Iniciar sesión en Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@7290e214a610b32bc0eef81748948b6d466a8783 # v2.2.0
+
+      - name: Publicar la imagen en ECR (etiqueta inmutable = SHA)
+        id: push
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          gunzip -c image.tar.gz | docker load
+          rm image.tar.gz
+          aws ecr describe-repositories --repository-names "${ECR_REPOSITORY}" >/dev/null 2>&1 \
+            || aws ecr create-repository --repository-name "${ECR_REPOSITORY}" \
+                 --image-tag-mutability IMMUTABLE \
+                 --image-scanning-configuration scanOnPush=true \
+                 --tags Key=project,Value=logifast-envios
+          target="${REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+          if aws ecr describe-images --repository-name "${ECR_REPOSITORY}" --image-ids imageTag="${IMAGE_TAG}" >/dev/null 2>&1; then
+            echo "La imagen ${target} ya existe (etiqueta inmutable); se reutiliza."
+          else
+            docker tag "${IMAGE_NAME}:${IMAGE_TAG}" "${target}"
+            docker push "${target}"
+          fi
+          digest="$(aws ecr describe-images --repository-name "${ECR_REPOSITORY}" --image-ids imageTag="${IMAGE_TAG}" --query 'imageDetails[0].imageDigest' --output text)"
+          echo "image_repo=${REGISTRY}/${ECR_REPOSITORY}" >> "${GITHUB_OUTPUT}"
+          echo "digest=${digest}" >> "${GITHUB_OUTPUT}"
+          echo "Imagen publicada: ${target}@${digest}"
+
+      - name: metrics-server (requerido por el HPA)
+        run: |
+          if ! kubectl -n kube-system get deployment metrics-server >/dev/null 2>&1; then
+            kubectl apply -f "https://github.com/kubernetes-sigs/metrics-server/releases/download/${METRICS_SERVER_VERSION}/components.yaml"
+          fi
+          kubectl -n kube-system rollout status deployment/metrics-server --timeout=180s
+
+      - name: Desplegar en EKS
+        env:
+          VERSION: ${{ needs.image.outputs.version }}
+          IMAGE_REPO: ${{ steps.push.outputs.image_repo }}
+        run: |
+          mkdir -p "${EVIDENCE_DIR}"
+          K8S_TARGET=eks IMAGE_NAME="${IMAGE_REPO}" IMAGE_TAG="${IMAGE_TAG}" \
+          GIT_COMMIT="${GITHUB_SHA}" APP_VERSION="${VERSION}" \
+          PIPELINE_RUN="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+          bash scripts/k8s-deploy.sh 2>&1 | tee "${EVIDENCE_DIR}/01-eks-deploy.log"
+
+      - name: Verificación post-deploy en EKS (interna y por el balanceador público)
+        id: verify
+        run: |
+          EXPECTED_COMMIT="${GITHUB_SHA}" PUBLIC_SERVICE=envios-svc-public DEPLOY_ENVIRONMENT=eks \
+            bash scripts/verify-k8s.sh 2>&1 | tee "${EVIDENCE_DIR}/02-verificacion-eks.log"
+
+      - name: Registro de trazabilidad y estado del clúster
+        if: ${{ !cancelled() }}
+        env:
+          JOB_STATUS: ${{ job.status }}
+          VERSION: ${{ needs.image.outputs.version }}
+          IMAGE_REPO: ${{ steps.push.outputs.image_repo }}
+          DIGEST: ${{ steps.push.outputs.digest }}
+          PUBLIC_URL: ${{ steps.verify.outputs.public_url }}
+        run: |
+          mkdir -p "${EVIDENCE_DIR}"
+          jq -n \
+            --arg fecha "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg commit "${GITHUB_SHA}" \
+            --arg rama "${GITHUB_REF_NAME}" --arg autor "${GITHUB_ACTOR}" --arg version "${VERSION}" \
+            --arg imagen "${IMAGE_REPO}:${IMAGE_TAG}" --arg digest "${DIGEST}" \
+            --arg cluster "${EKS_CLUSTER_NAME}" --arg region "${AWS_REGION}" --arg url "${PUBLIC_URL}" \
+            --arg resultado "${JOB_STATUS}" \
+            --arg ejecucion "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            '{fecha:$fecha, commit:$commit, rama:$rama, autor:$autor, version:$version, imagen:$imagen, digest:$digest, cluster:$cluster, region:$region, url_publica:$url, resultado:$resultado, ejecucion:$ejecucion}' \
+            | tee "${EVIDENCE_DIR}/00-registro-despliegue-eks.json"
+          kubectl get nodes -o wide > "${EVIDENCE_DIR}/03-nodos.txt" 2>&1 || true
+          kubectl get all,pdb,hpa -n logifast -o wide > "${EVIDENCE_DIR}/04-recursos-logifast.txt" 2>&1 || true
+          kubectl get all -n observability -o wide > "${EVIDENCE_DIR}/05-recursos-observability.txt" 2>&1 || true
+          kubectl top pods -A > "${EVIDENCE_DIR}/06-top-pods.txt" 2>&1 || true
+          kubectl -n logifast rollout history deployment/envios-svc > "${EVIDENCE_DIR}/07-rollout-history.txt" 2>&1 || true
+          {
+            echo "## Despliegue en AWS EKS"
+            echo ""
+            echo "| Campo | Valor |"
+            echo "|---|---|"
+            echo "| Resultado | **${JOB_STATUS}** |"
+            echo "| Clúster | ${EKS_CLUSTER_NAME} (${AWS_REGION}) |"
+            echo "| Commit | \`${GITHUB_SHA}\` |"
+            echo "| Imagen (ECR) | \`${IMAGE_REPO}:${IMAGE_TAG}\` |"
+            echo "| Digest | \`${DIGEST}\` |"
+            echo "| URL pública | ${PUBLIC_URL:-n/a} |"
+            echo ""
+            echo "Evidencias en el artefacto **evidencia-eks-${IMAGE_TAG}**. Grafana: \`kubectl -n observability port-forward svc/grafana 3000:3000\`."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Subir evidencias del despliegue EKS
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: evidencia-eks-${{ needs.image.outputs.tag }}
+          path: evidencias-eks/
+          retention-days: 30
