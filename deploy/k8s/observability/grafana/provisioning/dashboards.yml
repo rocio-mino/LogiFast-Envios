@@ -1,0 +1,12 @@
+# Copia de deploy/observability/grafana/provisioning (Rocío): los nombres de servicio
+# prometheus/loki coinciden dentro del namespace "observability".
+apiVersion: 1
+providers:
+  - name: LogiFast EP3
+    orgId: 1
+    folder: LogiFast EP3
+    type: file
+    disableDeletion: true
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

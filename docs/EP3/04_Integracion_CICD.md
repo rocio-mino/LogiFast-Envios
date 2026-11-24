@@ -29,3 +29,7 @@ La etapa de observabilidad de Rocío corre localmente y en el entorno Docker Com
 ## Verificación de las métricas de CI
 
 Después de la verificación funcional, el workflow ejecuta `scripts/verify-ep3-metrics.sh`. El script consulta la API HTTP de Prometheus y exige muestras reales para duración del despliegue, cobertura JaCoCo, disponibilidad, solicitudes/errores HTTP, CPU y memoria de las réplicas. Los resultados JSON se guardan como evidencias del job. Así se valida la llegada de las métricas al sistema de observabilidad y no solo la respuesta de Pushgateway.
+
+## Continuación
+
+La integración completa, que suma SonarCloud, la auditoría de cumplimiento, la validación en Kubernetes y el despliegue en AWS EKS, y el uso de cada señal para tomar decisiones, se documentan en `09_Integracion_Pipeline_Decisiones.md`.

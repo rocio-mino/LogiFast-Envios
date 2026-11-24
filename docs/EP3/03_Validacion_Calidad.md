@@ -56,3 +56,5 @@ No se debe deshabilitar JaCoCo ni bajar el umbral para conseguir un pipeline ver
 ## Alcance del bloque de Rocío
 
 El bloqueo por fallas de seguridad (Snyk/Quality Gate) y los controles de SonarQube quedan para el bloque de Martín, que debe completar IE5 e IE6 en su dimensión de seguridad y cumplimiento.
+
+Completado en `08_Bloqueo_Seguridad.md` (Snyk Container bloqueante, SonarCloud, auditoría de cumplimiento y prueba controlada de bloqueo por seguridad).

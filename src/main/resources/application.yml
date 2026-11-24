@@ -65,4 +65,5 @@ info:
     name: ${spring.application.name}
     version: '@project.version@'
     commit: ${APP_COMMIT:local}
+    pipeline-run: ${APP_PIPELINE_RUN:local}
     instance: ${HOSTNAME:local}

@@ -9,6 +9,8 @@ JACOCO_CSV="${JACOCO_CSV:-target/site/jacoco/jacoco.csv}"
 DEPLOY_DURATION_SECONDS="${DEPLOY_DURATION_SECONDS:-}"
 GIT_COMMIT="${GIT_COMMIT:-local}"
 METRICS_INSTANCE="${METRICS_INSTANCE:-local}"
+# Entorno al que corresponde la duración medida (docker-compose, kind o eks).
+DEPLOY_ENVIRONMENT="${DEPLOY_ENVIRONMENT:-docker-compose}"
 
 [[ -n "${DEPLOY_DURATION_SECONDS}" ]] || {
   echo "ERROR: define DEPLOY_DURATION_SECONDS con el tiempo medido del despliegue." >&2
@@ -27,7 +29,7 @@ trap 'rm -f "${metrics_file}"' EXIT
 {
   echo '# HELP logifast_deploy_duration_seconds Tiempo de docker compose up hasta que los servicios requeridos quedan healthy.'
   echo '# TYPE logifast_deploy_duration_seconds gauge'
-  printf 'logifast_deploy_duration_seconds{environment="docker-compose",commit="%s"} %s\n' "${GIT_COMMIT}" "${DEPLOY_DURATION_SECONDS}"
+  printf 'logifast_deploy_duration_seconds{environment="%s",commit="%s"} %s\n' "${DEPLOY_ENVIRONMENT}" "${GIT_COMMIT}" "${DEPLOY_DURATION_SECONDS}"
   if [[ -n "${coverage}" ]]; then
     echo '# HELP logifast_test_coverage_percent Cobertura de líneas JaCoCo del último mvn verify exitoso.'
     echo '# TYPE logifast_test_coverage_percent gauge'

@@ -8,6 +8,9 @@ PROMETHEUS_URL="${PROMETHEUS_URL:-http://127.0.0.1:${PROMETHEUS_PORT:-9090}}"
 EVIDENCE_DIR="${EVIDENCE_DIR:-evidencias-ci}"
 MAX_ATTEMPTS="${MAX_ATTEMPTS:-30}"
 SLEEP_SECONDS="${SLEEP_SECONDS:-2}"
+# Selector de las series de contenedor: Docker Compose (cAdvisor) por defecto;
+# en Kubernetes se usa CONTAINER_SELECTOR='namespace="logifast",container="envios-svc"'.
+CONTAINER_SELECTOR="${CONTAINER_SELECTOR:-container_label_com_docker_compose_service=\"envios-svc\"}"
 mkdir -p "${EVIDENCE_DIR}"
 
 query_metric() {
@@ -41,7 +44,7 @@ query_metric 'logifast_test_coverage_percent' '09-test-coverage.json'
 query_metric 'up{job="logifast-envios"} == 1' '10-availability.json'
 query_metric 'http_server_requests_seconds_count{application="envios-svc"}' '11-http-requests.json'
 query_metric 'http_server_requests_seconds_count{application="envios-svc",status=~"4..|5.."} > 0' '12-http-errors.json'
-query_metric 'container_cpu_usage_seconds_total{container_label_com_docker_compose_service="envios-svc"}' '13-cpu-containers.json'
-query_metric 'container_memory_working_set_bytes{container_label_com_docker_compose_service="envios-svc"}' '14-memory-containers.json'
+query_metric "container_cpu_usage_seconds_total{${CONTAINER_SELECTOR}}" '13-cpu-containers.json'
+query_metric "container_memory_working_set_bytes{${CONTAINER_SELECTOR}}" '14-memory-containers.json'
 
 echo "OK: métricas CI, disponibilidad, solicitudes, errores, CPU y memoria fueron consultadas desde Prometheus."

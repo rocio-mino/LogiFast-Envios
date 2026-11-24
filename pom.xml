@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.0.8</version>
+        <version>4.0.10</version>
         <relativePath/>
     </parent>
 
@@ -27,6 +27,20 @@
         <jackson-bom.version>3.1.8</jackson-bom.version>
         <jackson-2-bom.version>2.21.8</jackson-2-bom.version>
         <postgresql.version>42.7.14</postgresql.version>
+
+        <!-- EP3 IE5: SonarCloud (SonarQube Cloud). Organización y clave se pueden
+             sobrescribir con las variables SONAR_ORGANIZATION / SONAR_PROJECT_KEY del repositorio. -->
+        <sonar-maven-plugin.version>5.9.0.7382</sonar-maven-plugin.version>
+        <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+        <sonar.organization>rocio-mino</sonar.organization>
+        <sonar.projectKey>rocio-mino_LogiFast-Envios</sonar.projectKey>
+        <sonar.projectName>LogiFast-Envios</sonar.projectName>
+        <!-- Alcance: código Java, configuración, Dockerfile y manifiestos Kubernetes (IaC). -->
+        <sonar.sources>pom.xml,src/main/java,src/main/resources,Dockerfile,deploy/k8s</sonar.sources>
+        <sonar.tests>src/test/java</sonar.tests>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <!-- Mismo criterio que JaCoCo: la clase main de Spring Boot no cuenta para cobertura. -->
+        <sonar.coverage.exclusions>**/*Application.java</sonar.coverage.exclusions>
     </properties>
 
     <dependencies>
@@ -118,6 +132,15 @@
     </dependencies>
 
     <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>${sonar-maven-plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
