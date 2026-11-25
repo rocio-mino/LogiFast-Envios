@@ -95,5 +95,7 @@ Durante el proceso aprendí a resolver problemas de configuración e integració
 Esta experiencia me permitió comprender la importancia de la observabilidad y de automatizar controles de calidad.
 
 ## Reflexión Martín
-
+Hice el tema de Kubernetes en AWS EKS, SonarCloud, auditoría con Gitleaks, Snyk bloqueante y protección de ramas,
+lo que mas me costó fue que Snyk bloqueó por Spring, la verificación de EKS falló por el balanceador, borrar el clúster dio error y los PRs se fueron a main.
+Aprendí que el pipeline bloquee a tiempo evita problemas, la trazabilidad, y que la nube cuesta y hay que borrar lo que no se usa.
 <!-- Pendiente: redactar personalmente y sin apoyo de IA (requisito de la pauta). -->

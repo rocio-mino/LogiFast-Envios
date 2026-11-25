@@ -559,7 +559,9 @@ Durante el proceso aprendí a resolver problemas de configuración e integració
 Esta experiencia me permitió comprender la importancia de la observabilidad y de automatizar controles de calidad.
 
 ### Martín
-
+Hice el tema de Kubernetes en AWS EKS, SonarCloud, auditoría con Gitleaks, Snyk bloqueante y protección de ramas,
+lo que mas me costó fue que Snyk bloqueó por Spring, la verificación de EKS falló por el balanceador, borrar el clúster dio error y los PRs se fueron a main.
+Aprendí que el pipeline bloquee a tiempo evita problemas, la trazabilidad, y que la nube cuesta y hay que borrar lo que no se usa.
 Durante el proceso del proyecto, lo que mas se me dificulto fue el tema de los Secrets y pasar las pruebas dentro de Github, pero gracias a las pruebas y error aprendi de apoco, lo que mejor se me dio fue la creacion de las imagenes y el uso de los comandos.
 
 ## Estado histórico de la EP2 (no corresponde a la pauta EP3)
