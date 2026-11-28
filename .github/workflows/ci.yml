@@ -477,12 +477,12 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Descargar la imagen construida (misma imagen probada)
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: imagen-docker-${{ needs.image.outputs.tag }}
 
       - name: Descargar reporte JaCoCo de la compilación validada
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: reportes-pruebas-${{ github.sha }}
           path: target
@@ -561,12 +561,12 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Descargar la imagen construida (misma imagen probada, no se reconstruye)
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: imagen-docker-${{ needs.image.outputs.tag }}
 
       - name: Descargar reporte JaCoCo de la compilación validada
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: reportes-pruebas-${{ github.sha }}
           path: target
@@ -721,12 +721,12 @@ jobs:
           kubectl get nodes -o wide
 
       - name: Descargar la imagen aprobada por los controles
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: imagen-docker-${{ needs.image.outputs.tag }}
 
       - name: Descargar reporte JaCoCo de la compilación validada
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           name: reportes-pruebas-${{ github.sha }}
           path: target
