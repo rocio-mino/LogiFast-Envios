@@ -67,7 +67,7 @@ jobs:
 
       - name: Publicar reportes de pruebas y cobertura
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: reportes-pruebas-${{ github.sha }}
           path: |
@@ -170,7 +170,7 @@ jobs:
 
       - name: Guardar reportes de Snyk
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: reportes-snyk-${{ github.sha }}
           path: snyk-*.*
@@ -248,7 +248,7 @@ jobs:
 
       - name: Guardar evidencia del Quality Gate
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: evidencia-sonarcloud-${{ github.sha }}
           path: |
@@ -312,7 +312,7 @@ jobs:
 
       - name: Guardar reportes de auditoría
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: evidencia-auditoria-${{ github.sha }}
           path: evidencias-auditoria/
@@ -442,7 +442,7 @@ jobs:
         run: docker save "${IMAGE_NAME}:${TAG}" "${IMAGE_NAME}:${VERSION}-${TAG}" | gzip -1 > image.tar.gz
 
       - name: Subir imagen como artefacto
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: imagen-docker-${{ steps.meta.outputs.tag }}
           path: image.tar.gz
@@ -451,7 +451,7 @@ jobs:
 
       - name: Guardar reporte de Snyk Container
         if: ${{ !cancelled() && hashFiles('snyk-container.json') != '' }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: reporte-snyk-container-${{ steps.meta.outputs.tag }}
           path: snyk-container.json
@@ -525,7 +525,7 @@ jobs:
 
       - name: Subir evidencias de Kubernetes
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: evidencia-k8s-kind-${{ needs.image.outputs.tag }}
           path: evidencias-k8s/
@@ -652,7 +652,7 @@ jobs:
 
       - name: Subir evidencias del despliegue
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: evidencia-deploy-${{ needs.image.outputs.tag }}
           path: evidencias-ci/
@@ -824,7 +824,7 @@ jobs:
 
       - name: Subir evidencias del despliegue EKS
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: evidencia-eks-${{ needs.image.outputs.tag }}
           path: evidencias-eks/
