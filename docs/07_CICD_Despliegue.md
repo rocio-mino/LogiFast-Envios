@@ -6,9 +6,9 @@ Workflow: [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)
 
 ```mermaid
 flowchart LR
-    A[push / PR] --> B[build-and-test<br/>mvn verify · JUnit · Cucumber · JaCoCo 100%]
+    A[push / PR] --> B[build-and-test<br/>Maven container · JUnit · Cucumber · JaCoCo 100%]
     A --> C[security<br/>Snyk Open Source + Snyk Code<br/>bloquea si ≥ high]
-    B --> D[image<br/>docker build<br/>etiqueta = SHA del commit<br/>Snyk Container]
+    B --> D[image<br/>docker build + Snyk Container<br/>Docker Hub en push develop/main]
     B --> E
     C --> E
     D --> E[deploy<br/>Docker Compose<br/>verificación + escalado]
@@ -17,9 +17,9 @@ flowchart LR
 
 | Job | Depende de | Falla si… | Produce |
 |---|---|---|---|
-| `build-and-test` | — | una prueba falla o la cobertura baja de 100% | `reportes-pruebas-<sha>` (JaCoCo, Surefire, Cucumber) |
+| `build-and-test` | — | una prueba falla o la cobertura baja de 100% | `mvn verify` dentro del contenedor Maven; `reportes-pruebas-<sha>` (JaCoCo, Surefire, Cucumber) |
 | `security` | — | Snyk encuentra vulnerabilidades ≥ high, o falta `SNYK_TOKEN` | `reportes-snyk-<sha>`, hallazgos en *Security* |
-| `image` | `build-and-test` | la imagen no compila | `imagen-docker-<sha7>` (la imagen exacta que se despliega) |
+| `image` | `build-and-test`, `security`, `sonarcloud`, `compliance-audit` | un control previo falla, la imagen no compila o Snyk Container detecta vulnerabilidad crítica | imagen etiquetada por SHA, publicación Docker Hub en push a `develop`/`main`, artefacto para despliegue |
 | `deploy` | `build-and-test`, `security`, `image` | cualquier verificación post-deploy falla | `evidencia-deploy-<sha7>`, entrada en *Deployments* |
 
 Disparadores: `push` a `develop` y `main`, Pull Request hacia `main` y `develop`
@@ -120,7 +120,22 @@ Abrir un PR hacia `develop`. Resultado esperado: `Seguridad (Snyk)` en rojo
 (Critical: Remote Code Execution) y `Deploy (entorno simulado)` **skipped**.
 Capturar pantalla del run y del resumen; luego cerrar el PR y borrar la rama.
 
-## 6. Rollback
+## 6. Publicación en Docker Hub (EFT IE7)
+
+El job `image` depende de `build-and-test`, `security`, `sonarcloud` y `compliance-audit`. Además, ejecuta Snyk Container antes de cualquier publicación. Por ello, una prueba fallida, un Quality Gate rechazado, una auditoría con errores o un hallazgo crítico de imagen impiden publicar.
+
+En `push` a `develop` o `main`, la imagen se etiqueta y publica en `DOCKERHUB_USERNAME/logifast-envios` con dos etiquetas de trazabilidad: `<sha7>` y `<versión>-<sha7>`. En Pull Requests la publicación se omite para no exponer secretos ni publicar artefactos de ramas sin integrar.
+
+Configurar en **GitHub → Settings → Secrets and variables → Actions → Secrets**:
+
+- `DOCKERHUB_USERNAME`: usuario de Docker Hub.
+- `DOCKERHUB_TOKEN`: Access Token de Docker Hub (no la contraseña de la cuenta).
+
+Crear previamente el repositorio `logifast-envios` en la cuenta Docker Hub indicada y revisar su visibilidad. Los secretos nunca deben guardarse en el repositorio ni en archivos `.env` versionados.
+
+La publicación en Docker Hub cumple el requisito EFT de publicar la imagen después de superar las pruebas. La publicación adicional en Amazon ECR se mantiene para el despliegue a AWS EKS.
+
+## 7. Rollback
 
 Como cada imagen queda identificada por su SHA, volver a una versión anterior es
 desplegar esa etiqueta:

@@ -347,11 +347,11 @@ El pipeline está en [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
 ```mermaid
 flowchart LR
-    A[push / PR] --> B[build-and-test<br/>mvn verify]
+    A[push / PR] --> B[build-and-test<br/>mvn verify en contenedor Maven]
     A --> C[security<br/>Snyk]
     A --> S[sonarcloud<br/>Quality Gate]
     A --> Q[compliance-audit<br/>políticas + Gitleaks]
-    B --> D[image<br/>docker build :SHA<br/>Snyk Container]
+    B --> D[image<br/>docker build :SHA<br/>Snyk Container<br/>Docker Hub en push develop/main]
     D --> K[k8s-validate<br/>kind]
     B & C & S & Q & D --> E[deploy<br/>Docker Compose]
     E & K --> X[deploy-eks<br/>AWS EKS]
@@ -359,11 +359,11 @@ flowchart LR
 
 | Etapa (job) | IE | Qué hace | Bloquea el deploy si… |
 |---|---|---|---|
-| `build-and-test` | IE2 | Descarga el repositorio, configura Java 21, ejecuta `mvn verify` (JUnit, Cucumber, JaCoCo) y publica los reportes | falla una prueba o no se cumple la cobertura |
+| `build-and-test` | EFT IE7 | Ejecuta `mvn verify` dentro de un contenedor Maven (JUnit, Cucumber, JaCoCo) y publica los reportes | falla una prueba o no se cumple la cobertura |
 | `Seguridad (Snyk)` | IE3 | Snyk Open Source (dependencias) y Snyk Code (análisis estático); publica hallazgos y registra el proyecto para alertas | hay vulnerabilidades **high/critical** o falta `SNYK_TOKEN` |
 | `SonarCloud (Quality Gate)` | EP3 IE5 · IE6 | Análisis de calidad y seguridad del código; espera el Quality Gate | el Quality Gate queda en `ERROR` o falta `SONAR_TOKEN` |
 | `Auditoría de cumplimiento` | EP3 IE5 · IE6 | `scripts/audit-compliance.py` (políticas CMP-01..08) y Gitleaks sobre todo el historial | se incumple una política o se detecta un secreto |
-| `Imagen Docker (build + escaneo)` | IE1 · IE4 | Construye la imagen con el `Dockerfile`, etiquetada con el SHA del commit y labels OCI; Snyk Container **bloqueante** en severidad critical (EP3) | la imagen no compila o tiene vulnerabilidades críticas |
+| `Imagen Docker (build + escaneo)` | EFT IE6 · IE7 | Construye la imagen con el `Dockerfile`, la etiqueta con el SHA y labels OCI, la analiza con Snyk Container y la publica en Docker Hub en push a `develop`/`main` después de superar todos los controles | falla un control previo, la imagen no compila o tiene vulnerabilidades críticas |
 | `Kubernetes (validación en kind)` | EP3 IE2 | Despliega los manifiestos de `deploy/k8s/` en un clúster kind con la imagen construida y verifica salud, commit, API, métricas y logs | un pod no arranca o falla una verificación |
 | `Deploy (entorno simulado)` | IE4 · IE5 | Despliega con Docker Compose la misma imagen construida, verifica salud, commit y API, prueba el escalado y guarda evidencias | — (falla si la verificación falla) |
 | `Deploy cloud (AWS EKS)` | EP3 IE2 | Publica la imagen en ECR y despliega en EKS (push a `develop`/`main` con `CLOUD_DEPLOY_ENABLED=true`) | — (requiere todos los anteriores en verde) |
